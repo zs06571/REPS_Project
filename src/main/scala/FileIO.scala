@@ -20,7 +20,18 @@ object FileIO {
   }
 
   def loadErrors(filePath: String): List[String] = {
-    loadRecords(filePath).collect { case Left(error) => error }
+    val source = Source.fromFile(filePath)
+    try {
+      source.getLines().drop(1).toList.zipWithIndex.flatMap {
+        case (line, index) =>
+          Parser.parseLine(line) match {
+            case Left(error)  => Some(s"Line ${index + 2}: $error | Raw data: $line")
+            case Right(_)     => None
+          }
+      }
+    } finally {
+      source.close()
+    }
   }
 
   def recordToCsv(record: EnergyRecord): String = {

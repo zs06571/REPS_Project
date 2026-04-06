@@ -12,7 +12,6 @@ case object Malfunction extends PlantStatus
 case object MaintenanceNeeded extends PlantStatus
 
 sealed trait SeverityLevel
-case object Info extends SeverityLevel
 case object Warning extends SeverityLevel
 case object Critical extends SeverityLevel
 
