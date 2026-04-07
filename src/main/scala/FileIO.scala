@@ -6,27 +6,39 @@ import java.io.FileWriter
 
 object FileIO {
 
-  def loadRecords(filePath: String): List[Either[String, EnergyRecord]] = {
+  private val energyHeader =
+    "date,time,energyType,actualGeneration,forecastGeneration,forecastAvailable,status,possibleCause,isValidForAnalysis"
+
+  private val deviceHeader =
+    "energyType,deviceStatus,detectedDate,detectedTime,note"
+
+  def loadEnergyRecords(filePath: String): List[Either[String, EnergyRecord]] = {
+    val file = new File(filePath)
+    if (!file.exists()) return Nil
+
     val source = Source.fromFile(filePath)
     try {
-      source.getLines().drop(1).toList.map(Parser.parseLine)
+      source.getLines().drop(1).toList.map(Parser.parseEnergyLine)
     } finally {
       source.close()
     }
   }
 
   def loadValidRecords(filePath: String): List[EnergyRecord] = {
-    loadRecords(filePath).collect { case Right(record) => record }
+    loadEnergyRecords(filePath).collect { case Right(record) => record }
   }
 
   def loadErrors(filePath: String): List[String] = {
+    val file = new File(filePath)
+    if (!file.exists()) return Nil
+
     val source = Source.fromFile(filePath)
     try {
       source.getLines().drop(1).toList.zipWithIndex.flatMap {
         case (line, index) =>
-          Parser.parseLine(line) match {
-            case Left(error)  => Some(s"Line ${index + 2}: $error | Raw data: $line")
-            case Right(_)     => None
+          Parser.parseEnergyLine(line) match {
+            case Left(error) => Some(s"Line ${index + 2}: $error | Raw data: $line")
+            case Right(_)    => None
           }
       }
     } finally {
@@ -34,33 +46,108 @@ object FileIO {
     }
   }
 
-  def recordToCsv(record: EnergyRecord): String = {
+  def energyRecordToCsv(record: EnergyRecord): String = {
     val energyType = record.energyType match {
       case Solar => "Solar"
       case Wind  => "Wind"
       case Hydro => "Hydro"
     }
 
-    val status = record.status match {
-      case Normal            => "Normal"
-      case LowOutput         => "LowOutput"
-      case Malfunction       => "Malfunction"
-      case MaintenanceNeeded => "MaintenanceNeeded"
+    val forecastValue = record.forecastGeneration match {
+      case Some(value) => value.toString
+      case None        => ""
     }
 
-    s"${record.date},${record.time},$energyType,${record.generation},${record.storage},${record.equipmentHealth},$status"
+    val plantStatus = record.status match {
+      case Normal              => "Normal"
+      case LowOutput           => "LowOutput"
+      case MaintenanceNeeded   => "MaintenanceNeeded"
+      case Malfunction         => "Malfunction"
+      case ForecastUnavailable => "ForecastUnavailable"
+    }
+
+    val cause = record.possibleCause.getOrElse("")
+
+    s"${record.date},${record.time},$energyType,${record.actualGeneration},$forecastValue,${record.forecastAvailable},$plantStatus,$cause,${record.isValidForAnalysis}"
   }
 
   def appendRecord(filePath: String, record: EnergyRecord): Unit = {
     val file = new File(filePath)
-    val needsLeadingNewline = file.exists() && file.length() > 0
+    val fileExistsAndHasContent = file.exists() && file.length() > 0
 
     val writer = new FileWriter(filePath, true)
     try {
-      if (needsLeadingNewline) {
+      if (!fileExistsAndHasContent) {
+        writer.write(energyHeader + "\n")
+      } else {
         writer.write("\n")
       }
-      writer.write(recordToCsv(record))
+      writer.write(energyRecordToCsv(record))
+    } finally {
+      writer.close()
+    }
+  }
+
+  def appendRecords(filePath: String, records: List[EnergyRecord]): Unit = {
+    records.foreach(record => appendRecord(filePath, record))
+  }
+
+  def overwriteEnergyRecords(filePath: String, records: List[EnergyRecord]): Unit = {
+    val writer = new FileWriter(filePath, false)
+    try {
+      writer.write(energyHeader + "\n")
+      writer.write(records.map(energyRecordToCsv).mkString("\n"))
+    } finally {
+      writer.close()
+    }
+  }
+
+  def loadDeviceStatusRecords(filePath: String): List[Either[String, DeviceStatusRecord]] = {
+    val file = new File(filePath)
+    if (!file.exists()) return Nil
+
+    val source = Source.fromFile(filePath)
+    try {
+      source.getLines().drop(1).toList.map(Parser.parseDeviceStatusLine)
+    } finally {
+      source.close()
+    }
+  }
+
+  def loadValidDeviceStatusRecords(filePath: String): List[DeviceStatusRecord] = {
+    loadDeviceStatusRecords(filePath).collect { case Right(record) => record }
+  }
+
+  def deviceStatusRecordToCsv(record: DeviceStatusRecord): String = {
+    val energyType = record.energyType match {
+      case Solar => "Solar"
+      case Wind  => "Wind"
+      case Hydro => "Hydro"
+    }
+
+    val deviceStatus = record.deviceStatus match {
+      case Operational      => "Operational"
+      case UnderMaintenance => "UnderMaintenance"
+      case Damaged          => "Damaged"
+    }
+
+    val note = record.note.getOrElse("")
+
+    s"$energyType,$deviceStatus,${record.detectedDate},${record.detectedTime},$note"
+  }
+
+  def appendDeviceStatusRecord(filePath: String, record: DeviceStatusRecord): Unit = {
+    val file = new File(filePath)
+    val fileExistsAndHasContent = file.exists() && file.length() > 0
+
+    val writer = new FileWriter(filePath, true)
+    try {
+      if (!fileExistsAndHasContent) {
+        writer.write(deviceHeader + "\n")
+      } else {
+        writer.write("\n")
+      }
+      writer.write(deviceStatusRecordToCsv(record))
     } finally {
       writer.close()
     }

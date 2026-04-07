@@ -1,10 +1,12 @@
 package com.reps
 
 import scala.io.StdIn.readLine
+import java.time.LocalDate
 
 object MainApp {
 
   val filePath = "data/energy_data.csv"
+  val deviceStatusFilePath = "data/device_status.csv"
 
   def showMenu(): Unit = {
     println("\n--- REPS Menu ---")
@@ -15,9 +17,12 @@ object MainApp {
     println("5. Analyze generation data")
     println("6. Generate alerts")
     println("7. View control recommendations")
-    println("8. Add new record")
-    println("9. Check file errors")
-    println("10. Exit")
+    println("8. Add new energy record")
+    println("9. Import energy data")
+    println("10. Update device status")
+    println("11. View device status records")
+    println("12. Check file errors")
+    println("13. Exit")
   }
 
   def filterMenu(records: List[EnergyRecord]): Unit = {
@@ -27,7 +32,7 @@ object MainApp {
     println("3. Filter by hour")
     println("4. Filter by month")
     println("5. Filter by date range")
-    println("6. Filter by status")
+    println("6. Filter by plant status")
     println("7. Back to main menu")
 
     val choice = readLine("Choose a filter option: ")
@@ -67,8 +72,8 @@ object MainApp {
         filterMenu(records)
 
       case "6" =>
-        val status = readValidStatus()
-        println(s"\nFiltered records for status $status:")
+        val status = readValidPlantStatus()
+        println(s"\nFiltered records for plant status $status:")
         Utils.printRecords(QueryService.filterByStatus(records, status))
         filterMenu(records)
 
@@ -83,29 +88,29 @@ object MainApp {
 
   def sortMenu(records: List[EnergyRecord]): Unit = {
     println("\n--- Sort Menu ---")
-    println("1. Sort by generation ascending")
-    println("2. Sort by generation descending")
-    println("3. Sort by storage ascending")
-    println("4. Sort by storage descending")
+    println("1. Sort by actual generation ascending")
+    println("2. Sort by actual generation descending")
+    println("3. Sort by forecast generation ascending")
+    println("4. Sort by forecast generation descending")
     println("5. Back to main menu")
 
     val choice = readLine("Choose a sort option: ")
 
     choice match {
       case "1" =>
-        Utils.printRecords(QueryService.sortByGenerationAsc(records))
+        Utils.printRecords(QueryService.sortByActualGenerationAsc(records))
         sortMenu(records)
 
       case "2" =>
-        Utils.printRecords(QueryService.sortByGenerationDesc(records))
+        Utils.printRecords(QueryService.sortByActualGenerationDesc(records))
         sortMenu(records)
 
       case "3" =>
-        Utils.printRecords(QueryService.sortByStorageAsc(records))
+        Utils.printRecords(QueryService.sortByForecastGenerationAsc(records))
         sortMenu(records)
 
       case "4" =>
-        Utils.printRecords(QueryService.sortByStorageDesc(records))
+        Utils.printRecords(QueryService.sortByForecastGenerationDesc(records))
         sortMenu(records)
 
       case "5" =>
@@ -117,11 +122,207 @@ object MainApp {
     }
   }
 
+  def importMenu(): Unit = {
+    println("\n--- Import Energy Data ---")
+    println("Choose energy sources:")
+    println("1. Solar")
+    println("2. Wind")
+    println("3. Hydro")
+    println("4. Solar + Wind")
+    println("5. Solar + Hydro")
+    println("6. Wind + Hydro")
+    println("7. Solar + Wind + Hydro")
+    println("8. Back")
+
+    val sourceChoice = readLine("Choose source option: ")
+
+    sourceChoice match {
+      case "8" => menuLoop()
+      case _ =>
+        val selectedSources = sourceChoice match {
+          case "1" => List(Solar)
+          case "2" => List(Wind)
+          case "3" => List(Hydro)
+          case "4" => List(Solar, Wind)
+          case "5" => List(Solar, Hydro)
+          case "6" => List(Wind, Hydro)
+          case "7" => List(Solar, Wind, Hydro)
+          case _   => Nil
+        }
+
+        if (selectedSources.isEmpty) {
+          println("Invalid source selection.")
+          importMenu()
+        } else {
+          importRangeMenu(selectedSources)
+        }
+    }
+  }
+
+  def importRangeMenu(selectedSources: List[EnergyType]): Unit = {
+    println("\n--- Select Import Range ---")
+    println("1. Latest record")
+    println("2. Last 24 hours")
+    println("3. Last 7 days")
+    println("4. Last 30 days")
+    println("5. Custom date range")
+    println("6. Back")
+
+    val rangeChoice = readLine("Choose range option: ")
+
+    rangeChoice match {
+      case "1" =>
+        importLatestForSources(selectedSources)
+        menuLoop()
+
+      case "2" =>
+        val end = LocalDate.now()
+        val start = end.minusDays(1)
+        importRangeForSources(selectedSources, formatDate(start), formatDate(end))
+        menuLoop()
+
+      case "3" =>
+        val end = LocalDate.now()
+        val start = end.minusDays(7)
+        importRangeForSources(selectedSources, formatDate(start), formatDate(end))
+        menuLoop()
+
+      case "4" =>
+        val end = LocalDate.now()
+        val start = end.minusDays(30)
+        importRangeForSources(selectedSources, formatDate(start), formatDate(end))
+        menuLoop()
+
+      case "5" =>
+        println("Enter start date:")
+        val startDate = readValidDate()
+        println("Enter end date:")
+        val endDate = readValidDate()
+        importRangeForSources(selectedSources, startDate, endDate)
+        menuLoop()
+
+      case "6" =>
+        importMenu()
+
+      case _ =>
+        println("Invalid range selection.")
+        importRangeMenu(selectedSources)
+    }
+  }
+
+  def importLatestForSources(selectedSources: List[EnergyType]): Unit = {
+    println("\nImporting latest data...")
+
+    val deviceStatuses = FileIO.loadValidDeviceStatusRecords(deviceStatusFilePath)
+
+    selectedSources.foreach {
+      case Solar =>
+        ApiService.importLatestSolarData() match {
+          case Right(record) =>
+            val finalRecord = DeviceStatusService.markImportedRecordsAsInvalidIfNeeded(List(record), deviceStatuses).head
+            FileIO.appendRecord(filePath, finalRecord)
+            println("Solar latest record imported successfully.")
+          case Left(error) =>
+            println(s"Solar import failed: $error")
+        }
+
+      case Wind =>
+        ApiService.importLatestWindData() match {
+          case Right(record) =>
+            val finalRecord = DeviceStatusService.markImportedRecordsAsInvalidIfNeeded(List(record), deviceStatuses).head
+            FileIO.appendRecord(filePath, finalRecord)
+            println("Wind latest record imported successfully.")
+          case Left(error) =>
+            println(s"Wind import failed: $error")
+        }
+
+      case Hydro =>
+        ApiService.importLatestHydroData() match {
+          case Right(record) =>
+            val finalRecord = DeviceStatusService.markImportedRecordsAsInvalidIfNeeded(List(record), deviceStatuses).head
+            FileIO.appendRecord(filePath, finalRecord)
+            println("Hydro latest record imported successfully.")
+          case Left(error) =>
+            println(s"Hydro import failed: $error")
+        }
+    }
+  }
+
+  def importRangeForSources(selectedSources: List[EnergyType], startDate: String, endDate: String): Unit = {
+    println(s"\nImporting records from $startDate to $endDate ...")
+
+    val deviceStatuses = FileIO.loadValidDeviceStatusRecords(deviceStatusFilePath)
+
+    selectedSources.foreach {
+      case Solar =>
+        ApiService.importSolarByRange(startDate, endDate) match {
+          case Right(records) =>
+            val finalRecords = DeviceStatusService.markImportedRecordsAsInvalidIfNeeded(records, deviceStatuses)
+            FileIO.appendRecords(filePath, finalRecords)
+            println(s"Solar range import successful. Imported ${finalRecords.length} record(s).")
+          case Left(error) =>
+            println(s"Solar range import failed: $error")
+        }
+        Thread.sleep(3000)
+
+      case Wind =>
+        ApiService.importWindByRange(startDate, endDate) match {
+          case Right(records) =>
+            val finalRecords = DeviceStatusService.markImportedRecordsAsInvalidIfNeeded(records, deviceStatuses)
+            FileIO.appendRecords(filePath, finalRecords)
+            println(s"Wind range import successful. Imported ${finalRecords.length} record(s).")
+          case Left(error) =>
+            println(s"Wind range import failed: $error")
+        }
+        Thread.sleep(3000)
+
+      case Hydro =>
+        ApiService.importHydroByRange(startDate, endDate) match {
+          case Right(records) =>
+            val finalRecords = DeviceStatusService.markImportedRecordsAsInvalidIfNeeded(records, deviceStatuses)
+            FileIO.appendRecords(filePath, finalRecords)
+            println(s"Hydro range import successful. Imported ${finalRecords.length} record(s).")
+          case Left(error) =>
+            println(s"Hydro range import failed: $error")
+        }
+        Thread.sleep(3000)
+    }
+  }
+
+  def updateDeviceStatusMenu(): Unit = {
+    println("\n--- Update Device Status ---")
+    val energyType = readValidEnergyType()
+    val deviceStatus = readValidDeviceStatus()
+    println("Enter detected date:")
+    val detectedDate = readValidDate()
+    println("Enter detected time:")
+    val detectedTime = readValidTime()
+    val note = readOptionalNote()
+
+    val statusRecord = DeviceStatusRecord(
+      energyType = energyType,
+      deviceStatus = deviceStatus,
+      detectedDate = detectedDate,
+      detectedTime = detectedTime,
+      note = note
+    )
+
+    FileIO.appendDeviceStatusRecord(deviceStatusFilePath, statusRecord)
+    println("Device status updated successfully.")
+  }
+
+  def formatDate(date: LocalDate): String = {
+    val day = f"${date.getDayOfMonth}%02d"
+    val month = f"${date.getMonthValue}%02d"
+    val year = date.getYear.toString
+    s"$day/$month/$year"
+  }
+
   def readValidDate(): String = {
     val input = readLine("Enter date (DD/MM/YYYY): ")
     if (Validation.isValidDate(input)) input
     else {
-      println("Invalid date. Please use DD/MM/YYYY. Day must be 01-31, month must be 01-12, and year must be between 1900 and 2100.")
+      println("Invalid date. Please use DD/MM/YYYY.")
       readValidDate()
     }
   }
@@ -130,7 +331,7 @@ object MainApp {
     val input = readLine("Enter time (HH:MM): ")
     if (Validation.isValidTime(input)) input
     else {
-      println("Invalid time. Please use HH:MM. Hour must be between 00 and 23, and minute must be between 00 and 59.")
+      println("Invalid time. Please use HH:MM.")
       readValidTime()
     }
   }
@@ -139,7 +340,7 @@ object MainApp {
     val input = readLine("Enter hour (HH): ")
     if (Validation.isValidHour(input)) input
     else {
-      println("Invalid hour. Please enter a value between 00 and 23.")
+      println("Invalid hour.")
       readValidHour()
     }
   }
@@ -149,10 +350,10 @@ object MainApp {
     val year = readLine("Enter year (YYYY): ")
 
     if (!Validation.isValidMonth(month)) {
-      println("Invalid month. Please enter a value between 01 and 12.")
+      println("Invalid month.")
       readValidMonthAndYear()
     } else if (!Validation.isValidYear(year)) {
-      println("Invalid year. Please enter a value between 1900 and 2100.")
+      println("Invalid year.")
       readValidMonthAndYear()
     } else {
       (month, year)
@@ -164,65 +365,101 @@ object MainApp {
     Parser.parseEnergyType(input) match {
       case Right(value) => value
       case Left(_) =>
-        println("Invalid energy type. Please enter Solar, Wind, or Hydro.")
+        println("Invalid energy type.")
         readValidEnergyType()
     }
   }
 
-  def readValidGeneration(): Double = {
-    val input = readLine("Enter generation: ")
+  def readValidActualGeneration(): Double = {
+    val input = readLine("Enter actual generation: ")
     Validation.validateGeneration(input) match {
       case Right(value) => value
       case Left(error) =>
         println(error)
-        readValidGeneration()
+        readValidActualGeneration()
     }
   }
 
-  def readValidStorage(): Double = {
-    val input = readLine("Enter storage: ")
-    Validation.validateStorage(input) match {
+  def readOptionalForecastGeneration(): Option[Double] = {
+    val input = readLine("Enter forecast generation (leave empty if unavailable): ").trim
+    if (input.isEmpty) {
+      None
+    } else {
+      Validation.validateGeneration(input) match {
+        case Right(value) => Some(value)
+        case Left(error) =>
+          println(error)
+          readOptionalForecastGeneration()
+      }
+    }
+  }
+
+  def readValidForecastAvailable(): Boolean = {
+    val input = readLine("Is forecast available? (true/false): ").trim
+    Parser.parseForecastAvailable(input) match {
       case Right(value) => value
       case Left(error) =>
         println(error)
-        readValidStorage()
+        readValidForecastAvailable()
     }
   }
 
-  def readValidHealth(): Double = {
-    val input = readLine("Enter equipment health (0-100): ")
-    Validation.validateHealth(input) match {
-      case Right(value) => value
-      case Left(error) =>
-        println(error)
-        readValidHealth()
-    }
-  }
-
-  def readValidStatus(): PlantStatus = {
-    val input = readLine("Enter status (Normal/LowOutput/Malfunction/MaintenanceNeeded): ")
+  def readValidPlantStatus(): PlantStatus = {
+    val input = readLine("Enter plant status (Normal/LowOutput/MaintenanceNeeded/Malfunction/ForecastUnavailable): ")
     Parser.parsePlantStatus(input) match {
       case Right(value) => value
       case Left(_) =>
-        println("Invalid status. Please enter Normal, LowOutput, Malfunction, or MaintenanceNeeded.")
-        readValidStatus()
+        println("Invalid plant status.")
+        readValidPlantStatus()
     }
+  }
+
+  def readValidDeviceStatus(): DeviceStatus = {
+    val input = readLine("Enter device status (Operational/UnderMaintenance/Damaged): ")
+    Parser.parseDeviceStatus(input) match {
+      case Right(value) => value
+      case Left(_) =>
+        println("Invalid device status.")
+        readValidDeviceStatus()
+    }
+  }
+
+  def readOptionalCause(): Option[String] = {
+    val input = readLine("Enter possible cause (leave empty if none): ").trim
+    if (input.isEmpty) None else Some(input)
+  }
+
+  def readOptionalNote(): Option[String] = {
+    val input = readLine("Enter note (leave empty if none): ").trim
+    if (input.isEmpty) None else Some(input)
   }
 
   def createRecordFromInput(): EnergyRecord = {
     val date = readValidDate()
     val time = readValidTime()
     val energyType = readValidEnergyType()
-    val generation = readValidGeneration()
-    val storage = readValidStorage()
-    val health = readValidHealth()
-    val status = readValidStatus()
+    val actualGeneration = readValidActualGeneration()
+    val forecastGeneration = readOptionalForecastGeneration()
+    val forecastAvailable = readValidForecastAvailable()
+    val status = readValidPlantStatus()
+    val possibleCause = readOptionalCause()
 
-    EnergyRecord(date, time, energyType, generation, storage, health, status)
+    EnergyRecord(
+      date = date,
+      time = time,
+      energyType = energyType,
+      actualGeneration = actualGeneration,
+      forecastGeneration = forecastGeneration,
+      forecastAvailable = forecastAvailable,
+      status = status,
+      possibleCause = possibleCause,
+      isValidForAnalysis = true
+    )
   }
 
   def menuLoop(): Unit = {
     val records = FileIO.loadValidRecords(filePath)
+    val validRecords = QueryService.validForAnalysis(records)
 
     showMenu()
     val choice = readLine("Choose an option: ")
@@ -240,42 +477,56 @@ object MainApp {
         sortMenu(records)
 
       case "4" =>
-        val keyword = readLine("Enter keyword (examples: 12/04/2024, 08:00, Solar, Wind, Malfunction, Normal): ")
+        val keyword = readLine("Enter keyword: ")
         println(s"\nSearch results for '$keyword':")
         Utils.printRecords(QueryService.searchByKeyword(records, keyword))
         menuLoop()
 
       case "5" =>
         println("\nGeneration analysis:")
-        Utils.printAnalysis(AnalyticsService.analyzeGeneration(records))
+        Utils.printAnalysis(AnalyticsService.analyzeGeneration(validRecords))
         menuLoop()
 
       case "6" =>
         println("\nGenerated alerts:")
-        val alerts = AlertService.generateAllAlerts(records)
+        val alerts = AlertService.generateAllAlerts(validRecords)
         Utils.printAlerts(alerts)
         menuLoop()
 
       case "7" =>
         println("\nControl recommendations:")
-        val alerts = AlertService.generateAllAlerts(records)
+        val alerts = AlertService.generateAllAlerts(validRecords)
         val recommendations = ControlService.generateRecommendations(alerts)
+          .filter(_.action != NoActionNeeded)
         Utils.printRecommendations(recommendations)
         menuLoop()
 
       case "8" =>
         val record = createRecordFromInput()
         FileIO.appendRecord(filePath, record)
-        println("New record added successfully.")
+        println("New energy record added successfully.")
         menuLoop()
 
       case "9" =>
+        importMenu()
+
+      case "10" =>
+        updateDeviceStatusMenu()
+        menuLoop()
+
+      case "11" =>
+        println("\nDevice status records:")
+        val deviceStatuses = FileIO.loadValidDeviceStatusRecords(deviceStatusFilePath)
+        Utils.printDeviceStatusRecords(deviceStatuses)
+        menuLoop()
+
+      case "12" =>
         println("\nChecking file parsing errors:")
         val errors = FileIO.loadErrors(filePath)
         Utils.printErrors(errors)
         menuLoop()
 
-      case "10" =>
+      case "13" =>
         println("Exiting REPS...")
 
       case _ =>

@@ -9,49 +9,112 @@ object Parser {
     case _       => Left("Invalid energy type.")
   }
 
-  def parsePlantStatus(value: String): Either[String, PlantStatus] = value.trim match {
-    case "Normal"            => Right(Normal)
-    case "LowOutput"         => Right(LowOutput)
-    case "Malfunction"       => Right(Malfunction)
-    case "MaintenanceNeeded" => Right(MaintenanceNeeded)
-    case _                   => Left("Invalid plant status.")
+  def parseDeviceStatus(value: String): Either[String, DeviceStatus] = value.trim match {
+    case "Operational"      => Right(Operational)
+    case "UnderMaintenance" => Right(UnderMaintenance)
+    case "Damaged"          => Right(Damaged)
+    case _                  => Left("Invalid device status.")
   }
 
-  def parseLine(line: String): Either[String, EnergyRecord] = {
-    val parts = line.split(",").map(_.trim).toList
+  def parsePlantStatus(value: String): Either[String, PlantStatus] = value.trim match {
+    case "Normal"              => Right(Normal)
+    case "LowOutput"           => Right(LowOutput)
+    case "MaintenanceNeeded"   => Right(MaintenanceNeeded)
+    case "Malfunction"         => Right(Malfunction)
+    case "ForecastUnavailable" => Right(ForecastUnavailable)
+    case _                     => Left("Invalid plant status.")
+  }
+
+  def parseForecastAvailable(value: String): Either[String, Boolean] = value.trim match {
+    case "true"  => Right(true)
+    case "false" => Right(false)
+    case _       => Left("Invalid forecastAvailable value. Use true or false.")
+  }
+
+  def parseIsValidForAnalysis(value: String): Either[String, Boolean] = value.trim match {
+    case "true"  => Right(true)
+    case "false" => Right(false)
+    case _       => Left("Invalid isValidForAnalysis value. Use true or false.")
+  }
+
+  def parseOptionalDouble(value: String): Either[String, Option[Double]] = {
+    val trimmed = value.trim
+    if (trimmed.isEmpty) {
+      Right(None)
+    } else {
+      try {
+        Right(Some(trimmed.toDouble))
+      } catch {
+        case _: NumberFormatException =>
+          Left("Invalid optional numeric value.")
+      }
+    }
+  }
+
+  def parseOptionalString(value: String): Option[String] = {
+    val trimmed = value.trim
+    if (trimmed.isEmpty) None else Some(trimmed)
+  }
+
+  def parseEnergyLine(line: String): Either[String, EnergyRecord] = {
+    val parts = line.split(",", -1).map(_.trim).toList
 
     parts match {
-      case date :: time :: energy :: generation :: storage :: health :: status :: Nil =>
+      case date :: time :: energy :: actual :: forecast :: forecastAvailable :: status :: possibleCause :: isValidForAnalysis :: Nil =>
         if (!Validation.isValidDate(date)) {
           Left(s"Invalid date format: $date")
         } else if (!Validation.isValidTime(time)) {
           Left(s"Invalid time format: $time")
         } else {
-          parseEnergyType(energy) match {
-            case Left(err) => Left(err)
-            case Right(energyType) =>
-              Validation.validateGeneration(generation) match {
-                case Left(err) => Left(err)
-                case Right(gen) =>
-                  Validation.validateStorage(storage) match {
-                    case Left(err) => Left(err)
-                    case Right(sto) =>
-                      Validation.validateHealth(health) match {
-                        case Left(err) => Left(err)
-                        case Right(eqHealth) =>
-                          parsePlantStatus(status) match {
-                            case Left(err) => Left(err)
-                            case Right(plantStat) =>
-                              Right(EnergyRecord(date, time, energyType, gen, sto, eqHealth, plantStat))
-                          }
-                      }
-                  }
-              }
-          }
+          for {
+            energyType <- parseEnergyType(energy)
+            actualGeneration <- Validation.validateGeneration(actual)
+            forecastGeneration <- parseOptionalDouble(forecast)
+            forecastFlag <- parseForecastAvailable(forecastAvailable)
+            plantStatus <- parsePlantStatus(status)
+            validFlag <- parseIsValidForAnalysis(isValidForAnalysis)
+          } yield EnergyRecord(
+            date = date,
+            time = time,
+            energyType = energyType,
+            actualGeneration = actualGeneration,
+            forecastGeneration = forecastGeneration,
+            forecastAvailable = forecastFlag,
+            status = plantStatus,
+            possibleCause = parseOptionalString(possibleCause),
+            isValidForAnalysis = validFlag
+          )
         }
 
       case _ =>
-        Left("Invalid CSV line format.")
+        Left("Invalid energy CSV line format.")
+    }
+  }
+
+  def parseDeviceStatusLine(line: String): Either[String, DeviceStatusRecord] = {
+    val parts = line.split(",", -1).map(_.trim).toList
+
+    parts match {
+      case energy :: deviceStatus :: detectedDate :: detectedTime :: note :: Nil =>
+        if (!Validation.isValidDate(detectedDate)) {
+          Left(s"Invalid detected date format: $detectedDate")
+        } else if (!Validation.isValidTime(detectedTime)) {
+          Left(s"Invalid detected time format: $detectedTime")
+        } else {
+          for {
+            energyType <- parseEnergyType(energy)
+            status <- parseDeviceStatus(deviceStatus)
+          } yield DeviceStatusRecord(
+            energyType = energyType,
+            deviceStatus = status,
+            detectedDate = detectedDate,
+            detectedTime = detectedTime,
+            note = parseOptionalString(note)
+          )
+        }
+
+      case _ =>
+        Left("Invalid device status CSV line format.")
     }
   }
 }

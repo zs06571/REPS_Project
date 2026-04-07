@@ -2,53 +2,44 @@ package com.reps
 
 object AnalyticsService {
 
-  def extractGeneration(records: List[EnergyRecord]): List[Double] = {
-    records.map(_.generation)
-  }
+  def analyzeGeneration(records: List[EnergyRecord]): Option[AnalysisResult] = {
+    val validRecords = records.filter(_.isValidForAnalysis)
+    val values = validRecords.map(_.actualGeneration)
 
-  def mean(values: List[Double]): Option[Double] = {
-    if (values.isEmpty) None
-    else Some(values.sum / values.length)
-  }
-
-  def median(values: List[Double]): Option[Double] = {
     if (values.isEmpty) {
       None
     } else {
       val sorted = values.sorted
-      val mid = sorted.length / 2
+      val totalRecords = values.length
+      val mean = values.sum / totalRecords
 
-      if (sorted.length % 2 == 0)
-        Some((sorted(mid - 1) + sorted(mid)) / 2)
-      else
-        Some(sorted(mid))
+      val median =
+        if (totalRecords % 2 == 1) {
+          sorted(totalRecords / 2)
+        } else {
+          val mid1 = sorted(totalRecords / 2 - 1)
+          val mid2 = sorted(totalRecords / 2)
+          (mid1 + mid2) / 2.0
+        }
+
+      val frequencyMap = values.groupBy(identity).view.mapValues(_.size).toMap
+      val mode = frequencyMap.maxBy(_._2)._1
+
+      val minValue = values.min
+      val maxValue = values.max
+      val range = maxValue - minValue
+      val midrange = (minValue + maxValue) / 2.0
+
+      Some(
+        AnalysisResult(
+          mean = mean,
+          median = median,
+          mode = mode,
+          range = range,
+          midrange = midrange,
+          totalRecords = totalRecords
+        )
+      )
     }
-  }
-
-  def mode(values: List[Double]): Option[Double] = {
-    if (values.isEmpty) None
-    else Some(values.groupBy(identity).maxBy(_._2.size)._1)
-  }
-
-  def range(values: List[Double]): Option[Double] = {
-    if (values.isEmpty) None
-    else Some(values.max - values.min)
-  }
-
-  def midrange(values: List[Double]): Option[Double] = {
-    if (values.isEmpty) None
-    else Some((values.max + values.min) / 2)
-  }
-
-  def analyzeGeneration(records: List[EnergyRecord]): Option[AnalysisResult] = {
-    val values = extractGeneration(records)
-
-    for {
-      avg <- mean(values)
-      med <- median(values)
-      mod <- mode(values)
-      ran <- range(values)
-      mid <- midrange(values)
-    } yield AnalysisResult(avg, med, mod, ran, mid, values.length)
   }
 }

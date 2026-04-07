@@ -10,10 +10,6 @@ object QueryService {
     records.filter(_.energyType == energyType)
   }
 
-  def filterByStatus(records: List[EnergyRecord], status: PlantStatus): List[EnergyRecord] = {
-    records.filter(_.status == status)
-  }
-
   def filterByHour(records: List[EnergyRecord], hour: String): List[EnergyRecord] = {
     records.filter(_.time.startsWith(hour + ":"))
   }
@@ -26,49 +22,65 @@ object QueryService {
   }
 
   def filterByDateRange(records: List[EnergyRecord], startDate: String, endDate: String): List[EnergyRecord] = {
-    def toNumber(date: String): Int = {
+    def toTuple(date: String): (Int, Int, Int) = {
       val parts = date.split("/")
-      val day = parts(0).toInt
-      val month = parts(1).toInt
-      val year = parts(2).toInt
-      year * 10000 + month * 100 + day
+      (parts(2).toInt, parts(1).toInt, parts(0).toInt)
     }
 
-    val start = toNumber(startDate)
-    val end = toNumber(endDate)
+    def isAfterOrEqual(a: (Int, Int, Int), b: (Int, Int, Int)): Boolean = {
+      a._1 > b._1 ||
+        (a._1 == b._1 && a._2 > b._2) ||
+        (a._1 == b._1 && a._2 == b._2 && a._3 >= b._3)
+    }
+
+    def isBeforeOrEqual(a: (Int, Int, Int), b: (Int, Int, Int)): Boolean = {
+      a._1 < b._1 ||
+        (a._1 == b._1 && a._2 < b._2) ||
+        (a._1 == b._1 && a._2 == b._2 && a._3 <= b._3)
+    }
+
+    val start = toTuple(startDate)
+    val end = toTuple(endDate)
 
     records.filter { record =>
-      val current = toNumber(record.date)
-      current >= start && current <= end
+      val current = toTuple(record.date)
+      isAfterOrEqual(current, start) && isBeforeOrEqual(current, end)
     }
   }
 
-  def sortByGenerationAsc(records: List[EnergyRecord]): List[EnergyRecord] = {
-    records.sortBy(_.generation)
+  def filterByStatus(records: List[EnergyRecord], status: PlantStatus): List[EnergyRecord] = {
+    records.filter(_.status == status)
   }
 
-  def sortByGenerationDesc(records: List[EnergyRecord]): List[EnergyRecord] = {
-    records.sortBy(_.generation)(Ordering[Double].reverse)
+  def sortByActualGenerationAsc(records: List[EnergyRecord]): List[EnergyRecord] = {
+    records.sortBy(_.actualGeneration)
   }
 
-  def sortByStorageAsc(records: List[EnergyRecord]): List[EnergyRecord] = {
-    records.sortBy(_.storage)
+  def sortByActualGenerationDesc(records: List[EnergyRecord]): List[EnergyRecord] = {
+    records.sortBy(_.actualGeneration)(Ordering[Double].reverse)
   }
 
-  def sortByStorageDesc(records: List[EnergyRecord]): List[EnergyRecord] = {
-    records.sortBy(_.storage)(Ordering[Double].reverse)
+  def sortByForecastGenerationAsc(records: List[EnergyRecord]): List[EnergyRecord] = {
+    records.sortBy(_.forecastGeneration.getOrElse(Double.MaxValue))
+  }
+
+  def sortByForecastGenerationDesc(records: List[EnergyRecord]): List[EnergyRecord] = {
+    records.sortBy(_.forecastGeneration.getOrElse(Double.MinValue))(Ordering[Double].reverse)
   }
 
   def searchByKeyword(records: List[EnergyRecord], keyword: String): List[EnergyRecord] = {
+    val lowerKeyword = keyword.toLowerCase
+
     records.filter { record =>
-      record.date.contains(keyword) ||
-        record.time.contains(keyword) ||
-        record.energyType.toString.contains(keyword) ||
-        record.status.toString.contains(keyword)
+      record.date.toLowerCase.contains(lowerKeyword) ||
+        record.time.toLowerCase.contains(lowerKeyword) ||
+        record.energyType.toString.toLowerCase.contains(lowerKeyword) ||
+        record.status.toString.toLowerCase.contains(lowerKeyword) ||
+        record.possibleCause.getOrElse("").toLowerCase.contains(lowerKeyword)
     }
   }
 
-  def sortByField[A: Ordering](records: List[EnergyRecord], selector: EnergyRecord => A): List[EnergyRecord] = {
-    records.sortBy(selector)
+  def validForAnalysis(records: List[EnergyRecord]): List[EnergyRecord] = {
+    records.filter(_.isValidForAnalysis)
   }
 }

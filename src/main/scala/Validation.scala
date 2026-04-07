@@ -52,27 +52,4 @@ object Validation {
         Left("Invalid generation value. Please enter a non-negative number.")
     }
   }
-
-  def validateStorage(value: String): Either[String, Double] = {
-    try {
-      val number = value.toDouble
-      if (number < 0) Left("Invalid storage value. Please enter a non-negative number.")
-      else Right(number)
-    } catch {
-      case _: NumberFormatException =>
-        Left("Invalid storage value. Please enter a non-negative number.")
-    }
-  }
-
-  def validateHealth(value: String): Either[String, Double] = {
-    try {
-      val number = value.toDouble
-      if (number < 0 || number > 100)
-        Left("Invalid equipment health. Please enter a value between 0 and 100.")
-      else Right(number)
-    } catch {
-      case _: NumberFormatException =>
-        Left("Invalid equipment health. Please enter a value between 0 and 100.")
-    }
-  }
 }
