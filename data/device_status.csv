@@ -1,0 +1,10 @@
+energyType,deviceStatus,detectedDate,detectedTime,note
+Solar,Operational,01/04/2026,08:00,
+Wind,Operational,01/04/2026,08:00,
+Hydro,Operational,01/04/2026,08:00,
+Solar,Damaged,08/04/2026,08:00,
+Wind,UnderMaintenance,08/04/2026,08:00,
+Hydro,Damaged,08/04/2026,08:00,
+Solar,Operational,09/04/2026,08:00,
+Wind,Operational,09/04/2026,08:00,
+Hydro,Operational,09/04/2026,08:00,
