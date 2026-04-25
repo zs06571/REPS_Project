@@ -4,17 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="c1ff7655-8370-4dee-bb53-aab39775fa9e" name="Changes" comment="add API and change data structure">
-      <change afterPath="$PROJECT_DIR$/data/storage_data.csv" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/data/energy_data.csv" beforeDir="false" afterPath="$PROJECT_DIR$/data/energy_data.csv" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/scala/ApiService.scala" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/scala/ApiService.scala" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/scala/FileIO.scala" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/scala/FileIO.scala" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/scala/MainApp.scala" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/scala/MainApp.scala" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/scala/Models.scala" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/scala/Models.scala" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/scala/Parser.scala" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/scala/Parser.scala" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/scala/QueryService.scala" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/scala/QueryService.scala" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/scala/Utils.scala" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/scala/Utils.scala" afterDir="false" />
-    </list>
+    <list default="true" id="c1ff7655-8370-4dee-bb53-aab39775fa9e" name="Changes" comment="delect database structure(forcast),add storage" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -146,7 +136,7 @@
       <workItem from="1775549331493" duration="1615000" />
       <workItem from="1775550990210" duration="13787000" />
       <workItem from="1776326306498" duration="2205000" />
-      <workItem from="1777130151702" duration="2278000" />
+      <workItem from="1777130151702" duration="2600000" />
     </task>
     <task id="LOCAL-00001" summary="perfect exit code">
       <option name="closed" value="true" />
@@ -164,7 +154,23 @@
       <option name="project" value="LOCAL" />
       <updated>1775566338793</updated>
     </task>
-    <option name="localTasksCounter" value="3" />
+    <task id="LOCAL-00003" summary="delect database structure(forcast),add storage">
+      <option name="closed" value="true" />
+      <created>1777132490421</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1777132490421</updated>
+    </task>
+    <task id="LOCAL-00004" summary="delect database structure(forcast),add storage">
+      <option name="closed" value="true" />
+      <created>1777132624032</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1777132624032</updated>
+    </task>
+    <option name="localTasksCounter" value="5" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -184,6 +190,7 @@
   <component name="VcsManagerConfiguration">
     <MESSAGE value="perfect exit code" />
     <MESSAGE value="add API and change data structure" />
-    <option name="LAST_COMMIT_MESSAGE" value="add API and change data structure" />
+    <MESSAGE value="delect database structure(forcast),add storage" />
+    <option name="LAST_COMMIT_MESSAGE" value="delect database structure(forcast),add storage" />
   </component>
 </project>

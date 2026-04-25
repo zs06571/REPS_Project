@@ -2,6 +2,7 @@ package com.reps
 
 import scala.io.StdIn.readLine
 import java.time.LocalDate
+import scala.annotation.tailrec
 
 object MainApp {
 
@@ -200,7 +201,7 @@ object MainApp {
         importRangeMenu(selectedSources)
     }
   }
-
+  @tailrec
   def deviceMenu(): Unit = {
     println("\n--- Device Management ---")
     println("1. Update device status")
@@ -228,7 +229,7 @@ object MainApp {
         deviceMenu()
     }
   }
-
+  @tailrec
   def storageMenu(): Unit = {
     println("\n--- Storage Management ---")
     println("1. Import latest storage data")
@@ -370,7 +371,7 @@ object MainApp {
     val year = date.getYear.toString
     s"$day/$month/$year"
   }
-
+  @tailrec
   def readValidDate(): String = {
     val input = readLine("Enter date (DD/MM/YYYY): ")
     if (Validation.isValidDate(input)) input
@@ -379,7 +380,7 @@ object MainApp {
       readValidDate()
     }
   }
-
+  @tailrec
   def readValidTime(): String = {
     val input = readLine("Enter time (HH:MM): ")
     if (Validation.isValidTime(input)) input
@@ -388,7 +389,7 @@ object MainApp {
       readValidTime()
     }
   }
-
+  @tailrec
   def readValidHour(): String = {
     val input = readLine("Enter hour (HH): ")
     if (Validation.isValidHour(input)) input
@@ -397,7 +398,7 @@ object MainApp {
       readValidHour()
     }
   }
-
+  @tailrec
   def readValidMonthAndYear(): (String, String) = {
     val month = readLine("Enter month (MM): ")
     val year = readLine("Enter year (YYYY): ")
@@ -412,7 +413,7 @@ object MainApp {
       (month, year)
     }
   }
-
+  @tailrec
   def readValidEnergyType(): EnergyType = {
     val input = readLine("Enter energy type (Solar/Wind/Hydro): ")
     Parser.parseEnergyType(input) match {
@@ -422,7 +423,7 @@ object MainApp {
         readValidEnergyType()
     }
   }
-
+  @tailrec
   def readValidActualGeneration(): Double = {
     val input = readLine("Enter generation value: ")
     Validation.validateGeneration(input) match {
@@ -433,7 +434,7 @@ object MainApp {
     }
   }
 
-
+  @tailrec
   def readValidPlantStatus(): PlantStatus = {
     val input = readLine("Enter plant status (Normal/LowOutput/MaintenanceNeeded/Malfunction/ForecastUnavailable): ")
     Parser.parsePlantStatus(input) match {
@@ -443,7 +444,7 @@ object MainApp {
         readValidPlantStatus()
     }
   }
-
+  @tailrec
   def readValidDeviceStatus(): DeviceStatus = {
     val input = readLine("Enter device status (Operational/UnderMaintenance/Damaged): ")
     Parser.parseDeviceStatus(input) match {
@@ -482,7 +483,7 @@ object MainApp {
       isValidForAnalysis = true
     )
   }
-
+  @tailrec
   def menuLoop(): Unit = {
     val records = FileIO.loadValidRecords(filePath)
     val validRecords = QueryService.validForAnalysis(records)
