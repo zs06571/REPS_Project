@@ -60,13 +60,6 @@ object QueryService {
     records.sortBy(_.actualGeneration)(Ordering[Double].reverse)
   }
 
-  def sortByForecastGenerationAsc(records: List[EnergyRecord]): List[EnergyRecord] = {
-    records.sortBy(_.forecastGeneration.getOrElse(Double.MaxValue))
-  }
-
-  def sortByForecastGenerationDesc(records: List[EnergyRecord]): List[EnergyRecord] = {
-    records.sortBy(_.forecastGeneration.getOrElse(Double.MinValue))(Ordering[Double].reverse)
-  }
 
   def searchByKeyword(records: List[EnergyRecord], keyword: String): List[EnergyRecord] = {
     val lowerKeyword = keyword.toLowerCase

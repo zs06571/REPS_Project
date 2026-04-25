@@ -7,7 +7,7 @@ import java.io.FileWriter
 object FileIO {
 
   private val energyHeader =
-    "date,time,energyType,actualGeneration,forecastGeneration,forecastAvailable,status,possibleCause,isValidForAnalysis"
+    "date,time,energyType,actualGeneration,status,possibleCause,isValidForAnalysis"
 
   private val deviceHeader =
     "energyType,deviceStatus,detectedDate,detectedTime,note"
@@ -53,11 +53,6 @@ object FileIO {
       case Hydro => "Hydro"
     }
 
-    val forecastValue = record.forecastGeneration match {
-      case Some(value) => value.toString
-      case None        => ""
-    }
-
     val plantStatus = record.status match {
       case Normal              => "Normal"
       case LowOutput           => "LowOutput"
@@ -68,7 +63,7 @@ object FileIO {
 
     val cause = record.possibleCause.getOrElse("")
 
-    s"${record.date},${record.time},$energyType,${record.actualGeneration},$forecastValue,${record.forecastAvailable},$plantStatus,$cause,${record.isValidForAnalysis}"
+    s"${record.date},${record.time},$energyType,${record.actualGeneration},$plantStatus,$cause,${record.isValidForAnalysis}"
   }
 
   def appendRecord(filePath: String, record: EnergyRecord): Unit = {
@@ -151,5 +146,62 @@ object FileIO {
     } finally {
       writer.close()
     }
+  }
+
+  def storageRecordToCsv(record: StorageRecord): String = {
+    s"${record.date},${record.time},${record.chargingPower},${record.dischargingPower},${record.installedCapacity}"
+  }
+
+  def appendStorageRecord(filePath: String, record: StorageRecord): Unit = {
+    val header = "date,time,chargingPower,dischargingPower,installedCapacity"
+    val file = new java.io.File(filePath)
+    val fileExistsAndHasContent = file.exists() && file.length() > 0
+
+    val writer = new java.io.FileWriter(filePath, true)
+    try {
+      if (!fileExistsAndHasContent) {
+        writer.write(header + "\n")
+      } else {
+        writer.write("\n")
+      }
+      writer.write(storageRecordToCsv(record))
+    } finally {
+      writer.close()
+    }
+  }
+
+  def loadStorageRecords(filePath: String): List[StorageRecord] = {
+    val file = new java.io.File(filePath)
+    if (!file.exists()) return Nil
+
+    val source = scala.io.Source.fromFile(filePath)
+    try {
+      source.getLines().drop(1).toList.flatMap { line =>
+        val parts = line.split(",", -1).map(_.trim).toList
+        parts match {
+          case date :: time :: charging :: discharging :: capacity :: Nil =>
+            try {
+              Some(
+                StorageRecord(
+                  date = date,
+                  time = time,
+                  chargingPower = charging.toDouble,
+                  dischargingPower = discharging.toDouble,
+                  installedCapacity = capacity.toDouble
+                )
+              )
+            } catch {
+              case _: NumberFormatException => None
+            }
+          case _ => None
+        }
+      }
+    } finally {
+      source.close()
+    }
+  }
+
+  def loadValidStorageRecords(filePath: String): List[StorageRecord] = {
+    loadStorageRecords(filePath)
   }
 }

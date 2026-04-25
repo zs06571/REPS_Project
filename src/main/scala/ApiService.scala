@@ -98,8 +98,6 @@ object ApiService {
         time = time,
         energyType = Solar,
         actualGeneration = value,
-        forecastGeneration = None,
-        forecastAvailable = false,
         status = status,
         possibleCause = None,
         isValidForAnalysis = true
@@ -120,8 +118,6 @@ object ApiService {
         time = time,
         energyType = Wind,
         actualGeneration = value,
-        forecastGeneration = None,
-        forecastAvailable = false,
         status = status,
         possibleCause = None,
         isValidForAnalysis = true
@@ -138,8 +134,6 @@ object ApiService {
         time = time,
         energyType = Hydro,
         actualGeneration = value,
-        forecastGeneration = None,
-        forecastAvailable = false,
         status = ForecastUnavailable,
         possibleCause = None,
         isValidForAnalysis = true

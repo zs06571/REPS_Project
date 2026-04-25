@@ -7,20 +7,13 @@ object Utils {
       println("No records found.")
     } else {
       records.foreach { record =>
-        val forecastText = record.forecastGeneration match {
-          case Some(value) => value.toString
-          case None        => "N/A"
-        }
-
         val causeText = record.possibleCause.getOrElse("-")
 
         println(
           s"Date: ${record.date} | " +
             s"Time: ${record.time} | " +
-            s"Type: ${record.energyType} | " +
-            s"Actual: ${record.actualGeneration} | " +
-            s"Forecast: $forecastText | " +
-            s"Forecast enabled: ${record.forecastAvailable} | " +
+            s"Energy type: ${record.energyType} | " +
+            s"Generation: ${record.actualGeneration} | " +
             s"Status: ${record.status} | " +
             s"Cause: $causeText | " +
             s"Valid for analysis: ${record.isValidForAnalysis}"
@@ -99,6 +92,22 @@ object Utils {
       println("No parsing errors found.")
     } else {
       errors.foreach(println)
+    }
+  }
+
+  def printStorageRecords(records: List[StorageRecord]): Unit = {
+    if (records.isEmpty) {
+      println("No storage records found.")
+    } else {
+      records.foreach { record =>
+        println(
+          s"Date: ${record.date} | " +
+            s"Time: ${record.time} | " +
+            s"Charging power: ${record.chargingPower} | " +
+            s"Discharging power: ${record.dischargingPower} | " +
+            s"Installed capacity: ${record.installedCapacity}"
+        )
+      }
     }
   }
 }

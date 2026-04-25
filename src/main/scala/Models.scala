@@ -35,8 +35,6 @@ case class EnergyRecord(
                          time: String,
                          energyType: EnergyType,
                          actualGeneration: Double,
-                         forecastGeneration: Option[Double],
-                         forecastAvailable: Boolean,
                          status: PlantStatus,
                          possibleCause: Option[String],
                          isValidForAnalysis: Boolean

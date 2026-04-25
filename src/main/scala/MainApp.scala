@@ -6,22 +6,23 @@ import java.time.LocalDate
 object MainApp {
 
   val filePath = "data/energy_data.csv"
+  val storageFilePath = "data/storage_data.csv"
   val deviceStatusFilePath = "data/device_status.csv"
 
   def showMenu(): Unit = {
     println("\n--- REPS Menu ---")
-    println("1. View all records")
-    println("2. Filter records")
-    println("3. Sort records")
-    println("4. Search by keyword")
+    println("1. View all generation records")
+    println("2. Filter generation records")
+    println("3. Sort generation records")
+    println("4. Search generation records")
     println("5. Analyze generation data")
     println("6. Generate alerts")
     println("7. View control recommendations")
-    println("8. Add new energy record")
+    println("8. Add new generation record")
     println("9. Import energy data")
-    println("10. Update device status")
-    println("11. View device status records")
-    println("12. Check file errors")
+    println("10. Device management")
+    println("11. Storage management")
+    println("12. Check generation file errors")
     println("13. Exit")
   }
 
@@ -88,11 +89,9 @@ object MainApp {
 
   def sortMenu(records: List[EnergyRecord]): Unit = {
     println("\n--- Sort Menu ---")
-    println("1. Sort by actual generation ascending")
-    println("2. Sort by actual generation descending")
-    println("3. Sort by forecast generation ascending")
-    println("4. Sort by forecast generation descending")
-    println("5. Back to main menu")
+    println("1. Sort by generation ascending")
+    println("2. Sort by generation descending")
+    println("3. Back to main menu")
 
     val choice = readLine("Choose a sort option: ")
 
@@ -106,14 +105,6 @@ object MainApp {
         sortMenu(records)
 
       case "3" =>
-        Utils.printRecords(QueryService.sortByForecastGenerationAsc(records))
-        sortMenu(records)
-
-      case "4" =>
-        Utils.printRecords(QueryService.sortByForecastGenerationDesc(records))
-        sortMenu(records)
-
-      case "5" =>
         menuLoop()
 
       case _ =>
@@ -207,6 +198,68 @@ object MainApp {
       case _ =>
         println("Invalid range selection.")
         importRangeMenu(selectedSources)
+    }
+  }
+
+  def deviceMenu(): Unit = {
+    println("\n--- Device Management ---")
+    println("1. Update device status")
+    println("2. View device status records")
+    println("3. Back to main menu")
+
+    val choice = readLine("Choose an option: ")
+
+    choice match {
+      case "1" =>
+        updateDeviceStatusMenu()
+        deviceMenu()
+
+      case "2" =>
+        println("\nDevice status records:")
+        val deviceStatuses = FileIO.loadValidDeviceStatusRecords(deviceStatusFilePath)
+        Utils.printDeviceStatusRecords(deviceStatuses)
+        deviceMenu()
+
+      case "3" =>
+        menuLoop()
+
+      case _ =>
+        println("Invalid device menu option.")
+        deviceMenu()
+    }
+  }
+
+  def storageMenu(): Unit = {
+    println("\n--- Storage Management ---")
+    println("1. Import latest storage data")
+    println("2. View storage records")
+    println("3. Back to main menu")
+
+    val choice = readLine("Choose an option: ")
+
+    choice match {
+      case "1" =>
+        ApiService.importLatestStorageData() match {
+          case Right(record) =>
+            FileIO.appendStorageRecord(storageFilePath, record)
+            println("Latest storage record imported successfully.")
+          case Left(error) =>
+            println(s"Storage import failed: $error")
+        }
+        storageMenu()
+
+      case "2" =>
+        println("\nStorage records:")
+        val storageRecords = FileIO.loadValidStorageRecords(storageFilePath)
+        Utils.printStorageRecords(storageRecords)
+        storageMenu()
+
+      case "3" =>
+        menuLoop()
+
+      case _ =>
+        println("Invalid storage menu option.")
+        storageMenu()
     }
   }
 
@@ -371,7 +424,7 @@ object MainApp {
   }
 
   def readValidActualGeneration(): Double = {
-    val input = readLine("Enter actual generation: ")
+    val input = readLine("Enter generation value: ")
     Validation.validateGeneration(input) match {
       case Right(value) => value
       case Left(error) =>
@@ -380,29 +433,6 @@ object MainApp {
     }
   }
 
-  def readOptionalForecastGeneration(): Option[Double] = {
-    val input = readLine("Enter forecast generation (leave empty if unavailable): ").trim
-    if (input.isEmpty) {
-      None
-    } else {
-      Validation.validateGeneration(input) match {
-        case Right(value) => Some(value)
-        case Left(error) =>
-          println(error)
-          readOptionalForecastGeneration()
-      }
-    }
-  }
-
-  def readValidForecastAvailable(): Boolean = {
-    val input = readLine("Is forecast available? (true/false): ").trim
-    Parser.parseForecastAvailable(input) match {
-      case Right(value) => value
-      case Left(error) =>
-        println(error)
-        readValidForecastAvailable()
-    }
-  }
 
   def readValidPlantStatus(): PlantStatus = {
     val input = readLine("Enter plant status (Normal/LowOutput/MaintenanceNeeded/Malfunction/ForecastUnavailable): ")
@@ -439,8 +469,6 @@ object MainApp {
     val time = readValidTime()
     val energyType = readValidEnergyType()
     val actualGeneration = readValidActualGeneration()
-    val forecastGeneration = readOptionalForecastGeneration()
-    val forecastAvailable = readValidForecastAvailable()
     val status = readValidPlantStatus()
     val possibleCause = readOptionalCause()
 
@@ -449,8 +477,6 @@ object MainApp {
       time = time,
       energyType = energyType,
       actualGeneration = actualGeneration,
-      forecastGeneration = forecastGeneration,
-      forecastAvailable = forecastAvailable,
       status = status,
       possibleCause = possibleCause,
       isValidForAnalysis = true
@@ -477,6 +503,20 @@ object MainApp {
         sortMenu(records)
 
       case "4" =>
+        println("\n--- Search Generation Records ---")
+        println("Search supports date, time, energy type, plant status, and possible cause.")
+        val showHelp = readLine("View detailed search help? (y/n): ").trim.toLowerCase
+
+        if (showHelp == "y") {
+          println("You can search by the following fields:")
+          println("- Date: e.g. 07/04/2026")
+          println("- Time: e.g. 12:30")
+          println("- Energy type: Solar, Wind, Hydro")
+          println("- Plant status: Normal, LowOutput, MaintenanceNeeded, Malfunction, ForecastUnavailable")
+          println("- Possible cause text (if available)")
+          println("The search is case-insensitive and matches partial text.")
+        }
+
         val keyword = readLine("Enter keyword: ")
         println(s"\nSearch results for '$keyword':")
         Utils.printRecords(QueryService.searchByKeyword(records, keyword))
@@ -504,34 +544,26 @@ object MainApp {
       case "8" =>
         val record = createRecordFromInput()
         FileIO.appendRecord(filePath, record)
-        println("New energy record added successfully.")
+        println("New generation record added successfully.")
         menuLoop()
 
       case "9" =>
         importMenu()
 
       case "10" =>
-        updateDeviceStatusMenu()
-        menuLoop()
+        deviceMenu()
 
       case "11" =>
-        println("\nDevice status records:")
-        val deviceStatuses = FileIO.loadValidDeviceStatusRecords(deviceStatusFilePath)
-        Utils.printDeviceStatusRecords(deviceStatuses)
-        menuLoop()
+        storageMenu()
 
       case "12" =>
-        println("\nChecking file parsing errors:")
+        println("\nChecking generation file parsing errors:")
         val errors = FileIO.loadErrors(filePath)
         Utils.printErrors(errors)
         menuLoop()
 
       case "13" =>
         println("Exiting REPS...")
-
-      case _ =>
-        println("Invalid menu option.")
-        menuLoop()
     }
   }
 

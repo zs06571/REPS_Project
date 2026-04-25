@@ -25,11 +25,6 @@ object Parser {
     case _                     => Left("Invalid plant status.")
   }
 
-  def parseForecastAvailable(value: String): Either[String, Boolean] = value.trim match {
-    case "true"  => Right(true)
-    case "false" => Right(false)
-    case _       => Left("Invalid forecastAvailable value. Use true or false.")
-  }
 
   def parseIsValidForAnalysis(value: String): Either[String, Boolean] = value.trim match {
     case "true"  => Right(true)
@@ -60,7 +55,7 @@ object Parser {
     val parts = line.split(",", -1).map(_.trim).toList
 
     parts match {
-      case date :: time :: energy :: actual :: forecast :: forecastAvailable :: status :: possibleCause :: isValidForAnalysis :: Nil =>
+      case date :: time :: energy :: actual :: status :: possibleCause :: isValidForAnalysis :: Nil =>
         if (!Validation.isValidDate(date)) {
           Left(s"Invalid date format: $date")
         } else if (!Validation.isValidTime(time)) {
@@ -69,8 +64,6 @@ object Parser {
           for {
             energyType <- parseEnergyType(energy)
             actualGeneration <- Validation.validateGeneration(actual)
-            forecastGeneration <- parseOptionalDouble(forecast)
-            forecastFlag <- parseForecastAvailable(forecastAvailable)
             plantStatus <- parsePlantStatus(status)
             validFlag <- parseIsValidForAnalysis(isValidForAnalysis)
           } yield EnergyRecord(
@@ -78,8 +71,6 @@ object Parser {
             time = time,
             energyType = energyType,
             actualGeneration = actualGeneration,
-            forecastGeneration = forecastGeneration,
-            forecastAvailable = forecastFlag,
             status = plantStatus,
             possibleCause = parseOptionalString(possibleCause),
             isValidForAnalysis = validFlag
