@@ -1,5 +1,9 @@
 package com.reps
 
+// External references used in this file:
+// Scala Documentation. (n.d.). Concrete immutable collection classes | Collections | Scala Documentation. https://docs.scala-lang.org/overviews/collections-2.13/concrete-immutable-collection-classes.html
+// Immutable collections and operations such as filter, map, and sortBy are used in this file.
+
 object QueryService {
 
   // Filter records by exact date

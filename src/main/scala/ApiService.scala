@@ -1,5 +1,11 @@
 package com.reps
 
+// External references used in this file:
+// SoftwareMill. (n.d.). sttp: The Scala HTTP client you always wanted! — sttp 4 documentation. https://sttp.softwaremill.com/en/latest/
+// circe. (n.d.). Parsing JSON. http://circe.io/circe/parsing.html
+// sttp is used for HTTP requests to the Fingrid API.
+// circe is used for JSON parsing.
+
 import sttp.client3._
 import io.circe._
 import io.circe.parser._

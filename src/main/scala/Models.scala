@@ -1,5 +1,9 @@
 package com.reps
 
+// External references used in this file:
+// Scala Documentation. (n.d.). Case classes | Tour of Scala. https://docs.scala-lang.org/tour/case-classes.html
+// Case classes are used to model the main immutable data structures in this system.
+
 // Energy source types used in the system
 sealed trait EnergyType
 case object Solar extends EnergyType
@@ -61,19 +65,6 @@ case class StorageRecord(
                           chargingPower: Double,
                           dischargingPower: Double,
                           installedCapacity: Double
-                        )
-
-// Alert generated from abnormal conditions
-case class PlantSnapshot(
-                          date: String,
-                          time: String,
-                          solarGeneration: Double,
-                          windGeneration: Double,
-                          hydroGeneration: Double,
-                          totalGeneration: Double,
-                          chargingPower: Double,
-                          dischargingPower: Double,
-                          installedStorageCapacity: Double
                         )
 
 // Alert generated from abnormal conditions

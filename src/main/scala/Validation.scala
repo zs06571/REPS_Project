@@ -1,5 +1,11 @@
 package com.reps
 
+// External references used in this file:
+// Oracle. (n.d.). DateTimeFormatter (Java SE 17 & JDK 17). https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/format/DateTimeFormatter.html
+// Oracle. (n.d.). ResolverStyle (Java Platform SE 8). https://docs.oracle.com/javase/8/docs/api/java/time/format/ResolverStyle.html
+// DateTimeFormatter is used for parsing dates.
+// ResolverStyle.STRICT is used for strict date validation.
+
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.time.format.ResolverStyle
