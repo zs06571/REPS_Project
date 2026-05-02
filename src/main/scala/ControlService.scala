@@ -2,6 +2,7 @@ package com.reps
 
 object ControlService {
 
+  // Generate one recommendation for each alert
   def generateRecommendations(alerts: List[Alert]): List[Recommendation] = {
     alerts.map { alert =>
       val action = chooseAction(alert)
@@ -17,6 +18,7 @@ object ControlService {
     }
   }
 
+  // Choose the control action based on alert severity, target, and message
   private def chooseAction(alert: Alert): ControlAction = {
     val target = alert.target.toLowerCase
     val message = alert.message.toLowerCase
@@ -42,6 +44,7 @@ object ControlService {
     }
   }
 
+  // Build a readable explanation for the recommendation
   private def buildReason(alert: Alert, action: ControlAction): String = {
     val causeText = alert.possibleCause match {
       case Some(text) => s" Possible cause: $text."

@@ -7,18 +7,24 @@ import java.time.LocalDate
 
 object ApiService {
 
+  // Read the API key from environment variables if available
   private val apiKey: String =
     sys.env.getOrElse("FINGRID_API_KEY", "09d84ed10cb04ceca6f5e8e574973621")
+
+  // Base URL for Fingrid API
   private val baseUrl = "https://data.fingrid.fi/api"
 
+  // Dataset IDs for energy sources
   private val solarForecastDatasetId = 248
   private val windActualDatasetId = 181
   private val hydroActualDatasetId = 191
 
+  // Dataset IDs for storage data
   private val storageChargingDatasetId = 399
   private val storageDischargingDatasetId = 398
   private val storageCapacityDatasetId = 424
 
+  // Import the latest solar record
   def importLatestSolarData(): Either[String, EnergyRecord] = {
     for {
       raw <- fetchLatestJson(solarForecastDatasetId)
@@ -27,6 +33,7 @@ object ApiService {
     } yield record
   }
 
+  // Import the latest wind record
   def importLatestWindData(): Either[String, EnergyRecord] = {
     for {
       raw <- fetchLatestJson(windActualDatasetId)
@@ -35,6 +42,7 @@ object ApiService {
     } yield record
   }
 
+  // Import the latest hydro record
   def importLatestHydroData(): Either[String, EnergyRecord] = {
     for {
       raw <- fetchLatestJson(hydroActualDatasetId)
@@ -43,7 +51,9 @@ object ApiService {
     } yield record
   }
 
+  // Import the latest storage record
   def importLatestStorageData(): Either[String, StorageRecord] = {
+    // Storage is built from charging, discharging, and capacity datasets
     for {
       chargingJson <- fetchLatestJson(storageChargingDatasetId)
       _ = pause(2500)
@@ -59,6 +69,7 @@ object ApiService {
     } yield record
   }
 
+  // Import solar data for a date range
   def importSolarByRange(startDate: String, endDate: String): Either[String, List[EnergyRecord]] = {
     for {
       raw <- fetchRangeJson(solarForecastDatasetId, startDate, endDate)
@@ -67,6 +78,7 @@ object ApiService {
     } yield records
   }
 
+  // Import wind data for a date range
   def importWindByRange(startDate: String, endDate: String): Either[String, List[EnergyRecord]] = {
     for {
       raw <- fetchRangeJson(windActualDatasetId, startDate, endDate)
@@ -75,6 +87,7 @@ object ApiService {
     } yield records
   }
 
+  // Import hydro data for a date range
   def importHydroByRange(startDate: String, endDate: String): Either[String, List[EnergyRecord]] = {
     for {
       raw <- fetchRangeJson(hydroActualDatasetId, startDate, endDate)
@@ -83,6 +96,7 @@ object ApiService {
     } yield records
   }
 
+  // Build a solar record and assign status based on time-aware rules
   private def buildSolarRecord(data: (String, String, Double)): Either[String, EnergyRecord] = {
     val (date, time, value) = data
     val hour = time.split(":")(0).toInt
@@ -109,6 +123,7 @@ object ApiService {
     )
   }
 
+  // Build a wind record and assign status using a fixed threshold
   private def buildWindRecord(data: (String, String, Double)): Either[String, EnergyRecord] = {
     val (date, time, value) = data
 
@@ -129,6 +144,7 @@ object ApiService {
     )
   }
 
+  // Build a hydro record and assign status using a fixed threshold
   private def buildHydroRecord(data: (String, String, Double)): Either[String, EnergyRecord] = {
     val (date, time, value) = data
 
@@ -149,6 +165,7 @@ object ApiService {
     )
   }
 
+  // Build one storage record from three latest values
   private def buildStorageRecord(
                                   chargingData: (String, String, Double),
                                   dischargingData: (String, String, Double),
@@ -169,10 +186,12 @@ object ApiService {
     )
   }
 
+  // Pause between requests to reduce API pressure
   private def pause(milliseconds: Long): Unit = {
     Thread.sleep(milliseconds)
   }
 
+  // Send one latest-data request
   private def fetchLatestJsonOnce(datasetId: Int): Either[String, String] = {
     val backend = HttpURLConnectionBackend()
     val request = basicRequest
@@ -194,6 +213,7 @@ object ApiService {
     }
   }
 
+  // Retry once if the API returns rate limit status 429
   private def fetchLatestJson(datasetId: Int): Either[String, String] = {
     fetchLatestJsonOnce(datasetId) match {
       case r @ Right(_) => r
@@ -204,6 +224,7 @@ object ApiService {
     }
   }
 
+  // Send one range-data request
   private def fetchRangeJsonOnce(datasetId: Int, startDate: String, endDate: String): Either[String, String] = {
     val backend = HttpURLConnectionBackend()
 
@@ -229,6 +250,7 @@ object ApiService {
     }
   }
 
+  // Retry once if the range request gets status 429
   private def fetchRangeJson(datasetId: Int, startDate: String, endDate: String): Either[String, String] = {
     fetchRangeJsonOnce(datasetId, startDate, endDate) match {
       case r @ Right(_) => r
@@ -239,6 +261,7 @@ object ApiService {
     }
   }
 
+  // Parse one latest JSON result into (date, time, value)
   private def parseSingleValue(raw: String): Either[String, (String, String, Double)] = {
     parse(raw).left.map(_.message).flatMap { json =>
       val cursor = json.hcursor
@@ -250,6 +273,7 @@ object ApiService {
     }
   }
 
+  // Parse many range JSON results into a list of (date, time, value)
   private def parseManyValues(raw: String): Either[String, List[(String, String, Double)]] = {
     parse(raw).left.map(_.message).flatMap { json =>
 
@@ -277,6 +301,7 @@ object ApiService {
     }
   }
 
+  // Convert API time format into dd/MM/yyyy and HH:MM
   private def convertDateTime(startTime: String): Either[String, (String, String)] = {
     val parts = startTime.split("T")
     if (parts.length != 2) {
@@ -295,16 +320,19 @@ object ApiService {
     }
   }
 
+  // Convert dd/MM/yyyy to ISO start time
   private def toIsoStart(date: String): String = {
     val parts = date.split("/")
     s"${parts(2)}-${parts(1)}-${parts(0)}T00:00:00Z"
   }
 
+  // Convert dd/MM/yyyy to ISO end time
   private def toIsoEnd(date: String): String = {
     val parts = date.split("/")
     s"${parts(2)}-${parts(1)}-${parts(0)}T23:59:59Z"
   }
 
+  // Turn List[Either[String, A]] to Either[String, List[A]]
   private def sequence[A](items: List[Either[String, A]]): Either[String, List[A]] = {
     items.foldRight(Right(Nil): Either[String, List[A]]) {
       case (Right(value), Right(acc)) => Right(value :: acc)

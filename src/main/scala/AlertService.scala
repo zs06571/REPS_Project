@@ -2,14 +2,18 @@ package com.reps
 
 object AlertService {
 
+  // Detect alerts for records marked as LowOutput
   def detectLowOutput(records: List[EnergyRecord]): List[Alert] = {
     records
+      // Only valid records should generate alerts
       .filter(_.isValidForAnalysis)
       .filter(_.status == LowOutput)
       .map { record =>
         val basis = record.energyType match {
           case Solar =>
             val hour = record.time.split(":")(0).toInt
+
+            // Solar uses different thresholds depending on the time of day
             if ((hour >= 6 && hour <= 8) || (hour >= 17 && hour <= 20)) {
               s"Solar generation is below 20 during daylight edge hours (${record.time})."
             } else {
@@ -23,6 +27,7 @@ object AlertService {
             s"Hydro generation is below 700 at ${record.time}."
         }
 
+        // Short possible cause for each energy type
         val cause = record.energyType match {
           case Solar => Some("Low sunlight or cloud cover")
           case Wind  => Some("Low wind speed")
@@ -40,6 +45,7 @@ object AlertService {
       }
   }
 
+  // Detect alerts for records marked as MaintenanceNeeded
   def detectMaintenanceNeeded(records: List[EnergyRecord]): List[Alert] = {
     records
       .filter(_.isValidForAnalysis)
@@ -56,6 +62,7 @@ object AlertService {
       }
   }
 
+  // Detect alerts for records marked as Malfunction
   def detectMalfunction(records: List[EnergyRecord]): List[Alert] = {
     records
       .filter(_.isValidForAnalysis)
@@ -72,6 +79,7 @@ object AlertService {
       }
   }
 
+  // Collect all alerts and sort them by severity
   def generateAllAlerts(records: List[EnergyRecord]): List[Alert] = {
     val alerts =
       detectMalfunction(records) :::
@@ -81,10 +89,12 @@ object AlertService {
     alerts.sortBy(alert => severityRank(alert.severity))
   }
 
+  // Count the alerts exist at each severity level
   def countBySeverity(alerts: List[Alert]): Map[SeverityLevel, Int] = {
     alerts.groupBy(_.severity).view.mapValues(_.size).toMap
   }
 
+  // Define the severity order for sorting
   private def severityRank(severity: SeverityLevel): Int = severity match {
     case Critical => 1
     case Warning  => 2

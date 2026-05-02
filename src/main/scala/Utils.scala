@@ -2,6 +2,7 @@ package com.reps
 
 object Utils {
 
+  // Print generation records
   def printRecords(records: List[EnergyRecord]): Unit = {
     if (records.isEmpty) {
       println("No records found.")
@@ -22,6 +23,7 @@ object Utils {
     }
   }
 
+  // Print generation records
   def printDeviceStatusRecords(records: List[DeviceStatusRecord]): Unit = {
     if (records.isEmpty) {
       println("No device status records found.")
@@ -39,6 +41,7 @@ object Utils {
     }
   }
 
+  // Print analysis result
   def printAnalysis(result: Option[AnalysisResult]): Unit = {
     result match {
       case Some(analysis) =>
@@ -53,6 +56,7 @@ object Utils {
     }
   }
 
+  // Print alerts
   def printAlerts(alerts: List[Alert]): Unit = {
     if (alerts.isEmpty) {
       println("No alerts generated.")
@@ -71,6 +75,7 @@ object Utils {
     }
   }
 
+  // Print recommendations
   def printRecommendations(recommendations: List[Recommendation]): Unit = {
     if (recommendations.isEmpty) {
       println("No recommendations generated.")
@@ -87,6 +92,7 @@ object Utils {
     }
   }
 
+  // Print parsing errors
   def printErrors(errors: List[String]): Unit = {
     if (errors.isEmpty) {
       println("No parsing errors found.")
@@ -95,6 +101,7 @@ object Utils {
     }
   }
 
+  // Print storage records
   def printStorageRecords(records: List[StorageRecord]): Unit = {
     if (records.isEmpty) {
       println("No storage records found.")

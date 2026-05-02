@@ -7,6 +7,7 @@ import scala.util.Try
 
 object Validation {
 
+  // Check if the date is valid and in dd/MM/yyyy format
   def isValidDate(date: String): Boolean = {
     val formatter = DateTimeFormatter
       .ofPattern("dd/MM/uuuu")
@@ -22,6 +23,7 @@ object Validation {
     }.getOrElse(false)
   }
 
+  // Check if the time is valid and in HH:MM format
   def isValidTime(time: String): Boolean = {
     if (!time.matches("""\d{2}:\d{2}""")) {
       false
@@ -35,18 +37,23 @@ object Validation {
     }
   }
 
+  // Check if the hour is valid (0 - 23)
   def isValidHour(hour: String): Boolean = {
     hour.matches("""\d{2}""") && hour.toInt >= 0 && hour.toInt <= 23
   }
 
+  // Check if the month is valid (1 - 12)
   def isValidMonth(month: String): Boolean = {
     month.matches("""\d{2}""") && month.toInt >= 1 && month.toInt <= 12
   }
 
+  // Check if the year is valid (1900 - now)
   def isValidYear(year: String): Boolean = {
-    year.matches("""\d{4}""") && year.toInt >= 1900 && year.toInt <= 2100
+    val currentYear = java.time.LocalDate.now().getYear
+    year.matches("""\d{4}""") && year.toInt >= 1900 && year.toInt <= currentYear
   }
 
+  // Check if the generation value is a non-negative number
   def validateGeneration(value: String): Either[String, Double] = {
     try {
       val number = value.toDouble

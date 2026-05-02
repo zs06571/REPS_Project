@@ -2,18 +2,22 @@ package com.reps
 
 object QueryService {
 
+  // Filter records by exact date
   def filterByDate(records: List[EnergyRecord], date: String): List[EnergyRecord] = {
     records.filter(_.date == date)
   }
 
+  // Filter records by energy type
   def filterByEnergyType(records: List[EnergyRecord], energyType: EnergyType): List[EnergyRecord] = {
     records.filter(_.energyType == energyType)
   }
 
+  // Filter records by hour
   def filterByHour(records: List[EnergyRecord], hour: String): List[EnergyRecord] = {
     records.filter(_.time.startsWith(hour + ":"))
   }
 
+  // Filter records by month and year
   def filterByMonth(records: List[EnergyRecord], month: String, year: String): List[EnergyRecord] = {
     records.filter { record =>
       val parts = record.date.split("/")
@@ -21,6 +25,7 @@ object QueryService {
     }
   }
 
+  // Filter records between two dates
   def filterByDateRange(records: List[EnergyRecord], startDate: String, endDate: String): List[EnergyRecord] = {
     def toTuple(date: String): (Int, Int, Int) = {
       val parts = date.split("/")
@@ -48,6 +53,7 @@ object QueryService {
     }
   }
 
+  // Filter records for one week starting from the given date
   def filterByWeek(records: List[EnergyRecord], startDate: String): List[EnergyRecord] = {
     val parts = startDate.split("/")
     val day = parts(0).toInt
@@ -63,19 +69,22 @@ object QueryService {
     filterByDateRange(records, startDate, endDate)
   }
 
+  // Filter records by plant status
   def filterByStatus(records: List[EnergyRecord], status: PlantStatus): List[EnergyRecord] = {
     records.filter(_.status == status)
   }
 
+  // Sort records by generation in ascending order
   def sortByActualGenerationAsc(records: List[EnergyRecord]): List[EnergyRecord] = {
     records.sortBy(_.actualGeneration)
   }
 
+  // Sort records by generation in descending order
   def sortByActualGenerationDesc(records: List[EnergyRecord]): List[EnergyRecord] = {
     records.sortBy(_.actualGeneration)(Ordering[Double].reverse)
   }
 
-
+  // Search records by keyword across multiple fields
   def searchByKeyword(records: List[EnergyRecord], keyword: String): List[EnergyRecord] = {
     val lowerKeyword = keyword.toLowerCase
 
@@ -88,6 +97,7 @@ object QueryService {
     }
   }
 
+  // Keep only records that are valid for analysis
   def validForAnalysis(records: List[EnergyRecord]): List[EnergyRecord] = {
     records.filter(_.isValidForAnalysis)
   }

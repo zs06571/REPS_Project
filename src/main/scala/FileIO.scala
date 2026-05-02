@@ -6,12 +6,16 @@ import java.io.FileWriter
 
 object FileIO {
 
+  // Header for energy data CSV files
   private val energyHeader =
     "date,time,energyType,actualGeneration,status,possibleCause,isValidForAnalysis"
 
+  // Header for device status CSV files
   private val deviceHeader =
     "energyType,deviceStatus,detectedDate,detectedTime,note"
 
+  // Load all energy records from
+  // Each line is parsed into Either[String, EnergyRecord]
   def loadEnergyRecords(filePath: String): List[Either[String, EnergyRecord]] = {
     val file = new File(filePath)
     if (!file.exists()) return Nil
@@ -24,10 +28,12 @@ object FileIO {
     }
   }
 
+  // Keep only successfully parsed energy records
   def loadValidRecords(filePath: String): List[EnergyRecord] = {
     loadEnergyRecords(filePath).collect { case Right(record) => record }
   }
 
+  // Return parsing errors with line numbers
   def loadErrors(filePath: String): List[String] = {
     val file = new File(filePath)
     if (!file.exists()) return Nil
@@ -46,6 +52,7 @@ object FileIO {
     }
   }
 
+  // Convert one EnergyRecord into CSV format
   def energyRecordToCsv(record: EnergyRecord): String = {
     val energyType = record.energyType match {
       case Solar => "Solar"
@@ -65,6 +72,8 @@ object FileIO {
     s"${record.date},${record.time},$energyType,${record.actualGeneration},$plantStatus,$cause,${record.isValidForAnalysis}"
   }
 
+  // Append one energy record to the CSV file
+  // Write the header first if the file is empty
   def appendRecord(filePath: String, record: EnergyRecord): Unit = {
     val file = new File(filePath)
     val fileExistsAndHasContent = file.exists() && file.length() > 0
@@ -82,20 +91,12 @@ object FileIO {
     }
   }
 
+  // Append many energy records
   def appendRecords(filePath: String, records: List[EnergyRecord]): Unit = {
     records.foreach(record => appendRecord(filePath, record))
   }
 
-  def overwriteEnergyRecords(filePath: String, records: List[EnergyRecord]): Unit = {
-    val writer = new FileWriter(filePath, false)
-    try {
-      writer.write(energyHeader + "\n")
-      writer.write(records.map(energyRecordToCsv).mkString("\n"))
-    } finally {
-      writer.close()
-    }
-  }
-
+  // Load all device status records from file
   def loadDeviceStatusRecords(filePath: String): List[Either[String, DeviceStatusRecord]] = {
     val file = new File(filePath)
     if (!file.exists()) return Nil
@@ -108,10 +109,12 @@ object FileIO {
     }
   }
 
+  // Keep only successfully parsed device status records
   def loadValidDeviceStatusRecords(filePath: String): List[DeviceStatusRecord] = {
     loadDeviceStatusRecords(filePath).collect { case Right(record) => record }
   }
 
+  // Convert one DeviceStatusRecord into CSV format
   def deviceStatusRecordToCsv(record: DeviceStatusRecord): String = {
     val energyType = record.energyType match {
       case Solar => "Solar"
@@ -130,6 +133,7 @@ object FileIO {
     s"$energyType,$deviceStatus,${record.detectedDate},${record.detectedTime},$note"
   }
 
+  // Append one device status record to the CSV file
   def appendDeviceStatusRecord(filePath: String, record: DeviceStatusRecord): Unit = {
     val file = new File(filePath)
     val fileExistsAndHasContent = file.exists() && file.length() > 0
@@ -147,10 +151,12 @@ object FileIO {
     }
   }
 
+  // Convert one StorageRecord into CSV format
   def storageRecordToCsv(record: StorageRecord): String = {
     s"${record.date},${record.time},${record.chargingPower},${record.dischargingPower},${record.installedCapacity}"
   }
 
+  // Append one storage record to the CSV file
   def appendStorageRecord(filePath: String, record: StorageRecord): Unit = {
     val header = "date,time,chargingPower,dischargingPower,installedCapacity"
     val file = new java.io.File(filePath)
@@ -169,6 +175,7 @@ object FileIO {
     }
   }
 
+  // Load all storage records from file
   def loadStorageRecords(filePath: String): List[StorageRecord] = {
     val file = new java.io.File(filePath)
     if (!file.exists()) return Nil
@@ -200,6 +207,7 @@ object FileIO {
     }
   }
 
+  // Return all parsed storage records
   def loadValidStorageRecords(filePath: String): List[StorageRecord] = {
     loadStorageRecords(filePath)
   }

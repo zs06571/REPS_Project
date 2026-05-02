@@ -6,10 +6,12 @@ import scala.annotation.tailrec
 
 object MainApp {
 
+  // File paths used by the system
   val filePath = "data/energy_data.csv"
   val storageFilePath = "data/storage_data.csv"
   val deviceStatusFilePath = "data/device_status.csv"
 
+  // Print the main menu
   def showMenu(): Unit = {
     println("\n--- REPS Menu ---")
     println("1. View all generation records")
@@ -27,6 +29,7 @@ object MainApp {
     println("13. Exit")
   }
 
+  // Menu for filtering generation records (case 2)
   def filterMenu(records: List[EnergyRecord]): Unit = {
     println("\n--- Filter Menu ---")
     println("1. Filter by date")
@@ -96,6 +99,7 @@ object MainApp {
     }
   }
 
+  // Menu for sorting generation records (case 3)
   def sortMenu(records: List[EnergyRecord]): Unit = {
     println("\n--- Sort Menu ---")
     println("1. Sort by generation ascending")
@@ -122,6 +126,7 @@ object MainApp {
     }
   }
 
+  // Menu for selecting which energy sources to import (case 9)
   def importMenu(): Unit = {
     println("\n--- Import Energy Data ---")
     println("Choose energy sources:")
@@ -159,6 +164,7 @@ object MainApp {
     }
   }
 
+  // Menu for selecting the import range (case 9)
   def importRangeMenu(selectedSources: List[EnergyType]): Unit = {
     println("\n--- Select Import Range ---")
     println("1. Latest record")
@@ -209,6 +215,8 @@ object MainApp {
         importRangeMenu(selectedSources)
     }
   }
+
+  // Device management submenu (case 10)
   @tailrec
   def deviceMenu(): Unit = {
     println("\n--- Device Management ---")
@@ -237,6 +245,8 @@ object MainApp {
         deviceMenu()
     }
   }
+
+  // Storage management submenu (case 11)
   @tailrec
   def storageMenu(): Unit = {
     println("\n--- Storage Management ---")
@@ -272,6 +282,7 @@ object MainApp {
     }
   }
 
+  // Import latest data for the selected energy sources
   def importLatestForSources(selectedSources: List[EnergyType]): Unit = {
     println("\nImporting latest data...")
 
@@ -310,6 +321,7 @@ object MainApp {
     }
   }
 
+  // Import range data for the selected energy sources
   def importRangeForSources(selectedSources: List[EnergyType], startDate: String, endDate: String): Unit = {
     println(s"\nImporting records from $startDate to $endDate ...")
 
@@ -351,6 +363,7 @@ object MainApp {
     }
   }
 
+  // Update one device status record
   def updateDeviceStatusMenu(): Unit = {
     println("\n--- Update Device Status ---")
     val energyType = readValidEnergyType()
@@ -373,12 +386,15 @@ object MainApp {
     println("Device status updated successfully.")
   }
 
+  // Convert LocalDate into dd/MM/yyyy format
   def formatDate(date: LocalDate): String = {
     val day = f"${date.getDayOfMonth}%02d"
     val month = f"${date.getMonthValue}%02d"
     val year = date.getYear.toString
     s"$day/$month/$year"
   }
+
+  // Read a valid date from user input
   @tailrec
   def readValidDate(): String = {
     val input = readLine("Enter date (DD/MM/YYYY): ")
@@ -390,6 +406,7 @@ object MainApp {
     }
   }
 
+  // Read a valid time from user input
   @tailrec
   def readValidTime(): String = {
     val input = readLine("Enter time (HH:MM): ")
@@ -399,6 +416,8 @@ object MainApp {
       readValidTime()
     }
   }
+
+  // Read a valid hour from user input
   @tailrec
   def readValidHour(): String = {
     val input = readLine("Enter hour (HH): ")
@@ -408,6 +427,8 @@ object MainApp {
       readValidHour()
     }
   }
+
+  // Read a valid month and year
   @tailrec
   def readValidMonthAndYear(): (String, String) = {
     val month = readLine("Enter month (MM): ")
@@ -423,6 +444,8 @@ object MainApp {
       (month, year)
     }
   }
+
+  // Read a valid energy type
   @tailrec
   def readValidEnergyType(): EnergyType = {
     val input = readLine("Enter energy type (Solar/Wind/Hydro): ")
@@ -433,6 +456,8 @@ object MainApp {
         readValidEnergyType()
     }
   }
+
+  // Read a valid generation value
   @tailrec
   def readValidActualGeneration(): Double = {
     val input = readLine("Enter generation value: ")
@@ -444,6 +469,7 @@ object MainApp {
     }
   }
 
+  // Read a valid plant status
   @tailrec
   def readValidPlantStatus(): PlantStatus = {
     val input = readLine("Enter plant status (Normal/LowOutput/MaintenanceNeeded/Malfunction): ")
@@ -454,6 +480,8 @@ object MainApp {
         readValidPlantStatus()
     }
   }
+
+  // Read a valid device status
   @tailrec
   def readValidDeviceStatus(): DeviceStatus = {
     val input = readLine("Enter device status (Operational/UnderMaintenance/Damaged): ")
@@ -465,6 +493,8 @@ object MainApp {
     }
   }
 
+  // Read an optional cause field
+  // Replace commas to avoid breaking CSV format
   def readOptionalCause(): Option[String] = {
     val input = readLine("Enter possible cause (leave empty if none): ").trim
     val cleanedInput = input.replace(",", ";")
@@ -472,6 +502,8 @@ object MainApp {
     if (cleanedInput.isEmpty) None else Some(cleanedInput)
   }
 
+  // Read an optional note field
+  // Replace commas to avoid breaking CSV format
   def readOptionalNote(): Option[String] = {
     val input = readLine("Enter note (leave empty if none): ").trim
     val cleanedInput = input.replace(",", ";")
@@ -479,6 +511,7 @@ object MainApp {
     if (cleanedInput.isEmpty) None else Some(cleanedInput)
   }
 
+  // Create one generation record from user input
   def createRecordFromInput(): EnergyRecord = {
     val date = readValidDate()
     val time = readValidTime()
@@ -497,6 +530,8 @@ object MainApp {
       isValidForAnalysis = true
     )
   }
+
+  // Main menu loop
   @tailrec
   def menuLoop(): Unit = {
     val records = FileIO.loadValidRecords(filePath)
@@ -589,6 +624,7 @@ object MainApp {
     }
   }
 
+  // Program entry point
   def main(args: Array[String]): Unit = {
     menuLoop()
   }

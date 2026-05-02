@@ -2,6 +2,7 @@ package com.reps
 
 object DeviceStatusService {
 
+  // Find the latest device status record for one energy type
   def latestStatusForEnergyType(
                                  records: List[DeviceStatusRecord],
                                  energyType: EnergyType
@@ -16,6 +17,7 @@ object DeviceStatusService {
     }
   }
 
+  // If the latest device status is not operational, mark imported records as invalid
   def markImportedRecordsAsInvalidIfNeeded(
                                             imported: List[EnergyRecord],
                                             statusHistory: List[DeviceStatusRecord]
@@ -31,6 +33,7 @@ object DeviceStatusService {
     }
   }
 
+  // Convert dd/MM/yyyy into yyyy-MM-dd for sorting
   private def toSortableDate(date: String): String = {
     val parts = date.split("/")
     s"${parts(2)}-${parts(1)}-${parts(0)}"
