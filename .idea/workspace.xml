@@ -5,22 +5,7 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="c1ff7655-8370-4dee-bb53-aab39775fa9e" name="Changes" comment="delect database structure(forcast),add storage">
-      <change afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/sbt.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/sbt.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/vcs.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/data/device_status.csv" beforeDir="false" afterPath="$PROJECT_DIR$/data/device_status.csv" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/data/energy_data.csv" beforeDir="false" afterPath="$PROJECT_DIR$/data/energy_data.csv" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/data/storage_data.csv" beforeDir="false" afterPath="$PROJECT_DIR$/data/storage_data.csv" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/scala/AlertService.scala" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/scala/AlertService.scala" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/scala/ApiService.scala" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/scala/ApiService.scala" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/scala/ControlService.scala" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/scala/ControlService.scala" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/scala/FileIO.scala" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/scala/FileIO.scala" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/scala/MainApp.scala" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/scala/MainApp.scala" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/scala/Models.scala" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/scala/Models.scala" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/scala/Parser.scala" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/scala/Parser.scala" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/scala/QueryService.scala" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/scala/QueryService.scala" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/scala/Utils.scala" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/scala/Utils.scala" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/scala/Validation.scala" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/scala/Validation.scala" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -87,7 +72,7 @@
     "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
     "RunOnceActivity.git.unshallow": "true",
     "RunOnceActivity.typescript.service.memoryLimit.init": "true",
-    "git-widget-placeholder": "Merging master",
+    "git-widget-placeholder": "master",
     "kotlin-language-version-configured": "true",
     "node.js.selected.package.tslint": "(autodetect)",
     "nodejs_package_manager_path": "npm",

@@ -31,19 +31,6 @@ object Parser {
     case _       => Left("Invalid isValidForAnalysis value. Use true or false.")
   }
 
-  def parseOptionalDouble(value: String): Either[String, Option[Double]] = {
-    val trimmed = value.trim
-    if (trimmed.isEmpty) {
-      Right(None)
-    } else {
-      try {
-        Right(Some(trimmed.toDouble))
-      } catch {
-        case _: NumberFormatException =>
-          Left("Invalid optional numeric value.")
-      }
-    }
-  }
 
   def parseOptionalString(value: String): Option[String] = {
     val trimmed = value.trim
@@ -107,4 +94,3 @@ object Parser {
         Left("Invalid device status CSV line format.")
     }
   }
-}
