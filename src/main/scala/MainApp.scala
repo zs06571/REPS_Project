@@ -296,7 +296,7 @@ object MainApp {
       case Solar =>
         ApiService.importLatestSolarData() match {
           case Right(record) =>
-            val finalRecord = DeviceStatusService.markImportedRecordsAsInvalidIfNeeded(List(record), deviceStatuses).head
+            val finalRecord = DeviceStatusService.applyDeviceStatusToImportedRecords(List(record), deviceStatuses).head
             FileIO.appendRecord(filePath, finalRecord)
             println("Solar latest record imported successfully.")
           case Left(error) =>
@@ -306,7 +306,7 @@ object MainApp {
       case Wind =>
         ApiService.importLatestWindData() match {
           case Right(record) =>
-            val finalRecord = DeviceStatusService.markImportedRecordsAsInvalidIfNeeded(List(record), deviceStatuses).head
+            val finalRecord = DeviceStatusService.applyDeviceStatusToImportedRecords(List(record), deviceStatuses).head
             FileIO.appendRecord(filePath, finalRecord)
             println("Wind latest record imported successfully.")
           case Left(error) =>
@@ -316,7 +316,7 @@ object MainApp {
       case Hydro =>
         ApiService.importLatestHydroData() match {
           case Right(record) =>
-            val finalRecord = DeviceStatusService.markImportedRecordsAsInvalidIfNeeded(List(record), deviceStatuses).head
+            val finalRecord = DeviceStatusService.applyDeviceStatusToImportedRecords(List(record), deviceStatuses).head
             FileIO.appendRecord(filePath, finalRecord)
             println("Hydro latest record imported successfully.")
           case Left(error) =>
@@ -335,7 +335,7 @@ object MainApp {
       case Solar =>
         ApiService.importSolarByRange(startDate, endDate) match {
           case Right(records) =>
-            val finalRecords = DeviceStatusService.markImportedRecordsAsInvalidIfNeeded(records, deviceStatuses)
+            val finalRecords = DeviceStatusService.applyDeviceStatusToImportedRecords(records, deviceStatuses)
             FileIO.appendRecords(filePath, finalRecords)
             println(s"Solar range import successful. Imported ${finalRecords.length} record(s).")
           case Left(error) =>
@@ -346,7 +346,7 @@ object MainApp {
       case Wind =>
         ApiService.importWindByRange(startDate, endDate) match {
           case Right(records) =>
-            val finalRecords = DeviceStatusService.markImportedRecordsAsInvalidIfNeeded(records, deviceStatuses)
+            val finalRecords = DeviceStatusService.applyDeviceStatusToImportedRecords(records, deviceStatuses)
             FileIO.appendRecords(filePath, finalRecords)
             println(s"Wind range import successful. Imported ${finalRecords.length} record(s).")
           case Left(error) =>
@@ -357,7 +357,7 @@ object MainApp {
       case Hydro =>
         ApiService.importHydroByRange(startDate, endDate) match {
           case Right(records) =>
-            val finalRecords = DeviceStatusService.markImportedRecordsAsInvalidIfNeeded(records, deviceStatuses)
+            val finalRecords = DeviceStatusService.applyDeviceStatusToImportedRecords(records, deviceStatuses)
             FileIO.appendRecords(filePath, finalRecords)
             println(s"Hydro range import successful. Imported ${finalRecords.length} record(s).")
           case Left(error) =>
@@ -604,7 +604,17 @@ object MainApp {
 
       case "8" =>
         val record = createRecordFromInput()
-        FileIO.appendRecord(filePath, record)
+        val deviceStatuses = FileIO.loadValidDeviceStatusRecords(deviceStatusFilePath)
+        val finalRecord = DeviceStatusService
+          .applyDeviceStatusToImportedRecords(List(record), deviceStatuses)
+          .head
+
+        FileIO.appendRecord(filePath, finalRecord)
+
+        if (!finalRecord.isValidForAnalysis) {
+          println("Note: this record was saved, but marked as not valid for analysis because the device was not operational at that time.")
+        }
+
         println("New generation record added successfully.")
         menuLoop()
 

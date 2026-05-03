@@ -60,8 +60,8 @@ object AlertService {
           time = record.time,
           target = record.energyType.toString,
           severity = Warning,
-          message = "Maintenance may be needed. Basis: the record status is explicitly marked as MaintenanceNeeded.",
-          possibleCause = Some("Performance degradation")
+          message = "Maintenance may be needed. Basis: the record indicates a maintenance-related condition.",
+          possibleCause = record.possibleCause.orElse(Some("Performance degradation"))
         )
       }
   }
@@ -77,8 +77,8 @@ object AlertService {
           time = record.time,
           target = record.energyType.toString,
           severity = Critical,
-          message = "Possible malfunction detected. Basis: the record status is explicitly marked as Malfunction.",
-          possibleCause = Some("Equipment fault suspected")
+          message = "Possible malfunction detected. Basis: the record indicates a malfunction-related condition.",
+          possibleCause = record.possibleCause.orElse(Some("Equipment fault suspected"))
         )
       }
   }

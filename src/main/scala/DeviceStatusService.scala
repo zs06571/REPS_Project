@@ -1,45 +1,72 @@
-// Shuo Zhao 002513249
-// Hongyao Liu 002513919
-// Hongrui Zhang 002520436
-
 package com.reps
 
 object DeviceStatusService {
 
   // Find the latest device status record for one energy type
-  def latestStatusForEnergyType(
-                                 records: List[DeviceStatusRecord],
-                                 energyType: EnergyType
-                               ): Option[DeviceStatusRecord] = {
-    val filtered = records.filter(_.energyType == energyType)
+  // that happened at or before the given record time
+  def latestStatusBeforeOrAt(
+                              records: List[DeviceStatusRecord],
+                              energyType: EnergyType,
+                              date: String,
+                              time: String
+                            ): Option[DeviceStatusRecord] = {
+    val targetDateTime = toSortableDateTime(date, time)
+
+    val filtered = records.filter { r =>
+      r.energyType == energyType &&
+        toSortableDateTime(r.detectedDate, r.detectedTime) <= targetDateTime
+    }
 
     if (filtered.isEmpty) None
     else {
       Some(
-        filtered.maxBy(r => (toSortableDate(r.detectedDate), r.detectedTime))
+        filtered.maxBy(r => toSortableDateTime(r.detectedDate, r.detectedTime))
       )
     }
   }
 
-  // If the latest device status is not operational, mark imported records as invalid
-  def markImportedRecordsAsInvalidIfNeeded(
-                                            imported: List[EnergyRecord],
-                                            statusHistory: List[DeviceStatusRecord]
-                                          ): List[EnergyRecord] = {
+  // Apply device status to imported records
+  // Device status can override plant status
+  def applyDeviceStatusToImportedRecords(
+                                          imported: List[EnergyRecord],
+                                          statusHistory: List[DeviceStatusRecord]
+                                        ): List[EnergyRecord] = {
     imported.map { record =>
-      latestStatusForEnergyType(statusHistory, record.energyType) match {
-        case Some(deviceRecord) if deviceRecord.deviceStatus != Operational =>
-          record.copy(isValidForAnalysis = false)
+      latestStatusBeforeOrAt(
+        statusHistory,
+        record.energyType,
+        record.date,
+        record.time
+      ) match {
+        case Some(deviceRecord) =>
+          deviceRecord.deviceStatus match {
+            case Damaged =>
+              record.copy(
+                status = Malfunction,
+                isValidForAnalysis = false,
+                possibleCause = Some("Device status indicates damage")
+              )
 
-        case _ =>
+            case UnderMaintenance =>
+              record.copy(
+                status = MaintenanceNeeded,
+                isValidForAnalysis = false,
+                possibleCause = Some("Device is under maintenance")
+              )
+
+            case Operational =>
+              record
+          }
+
+        case None =>
           record
       }
     }
   }
 
-  // Convert dd/MM/yyyy into yyyy-MM-dd for sorting
-  private def toSortableDate(date: String): String = {
+  // Convert dd/MM/yyyy and HH:MM into yyyy-MM-dd HH:MM for comparison
+  private def toSortableDateTime(date: String, time: String): String = {
     val parts = date.split("/")
-    s"${parts(2)}-${parts(1)}-${parts(0)}"
+    s"${parts(2)}-${parts(1)}-${parts(0)} $time"
   }
 }
