@@ -1,24 +1,10 @@
 date,time,energyType,actualGeneration,status,possibleCause,isValidForAnalysis
-10/04/2026,07:00,Solar,15.0,LowOutput,Low sunlight,true
-10/04/2026,12:30,Solar,65.0,Normal,,true
-10/04/2026,18:00,Solar,12.0,LowOutput,Cloud cover,true
-10/04/2026,09:00,Wind,280.0,LowOutput,Low wind speed,true
-10/04/2026,14:00,Wind,520.0,Normal,,true
-10/04/2026,20:30,Wind,250.0,LowOutput,Low wind speed,true
-10/04/2026,08:30,Hydro,680.0,LowOutput,Reduced water flow,true
-10/04/2026,15:00,Hydro,920.0,Normal,,true
-11/04/2026,06:30,Solar,18.0,LowOutput,Morning cloud,true
-11/04/2026,11:30,Solar,72.0,Normal,,true
-11/04/2026,17:30,Solar,16.0,LowOutput,Low sunlight,true
-11/04/2026,10:00,Wind,610.0,Normal,,true
-11/04/2026,13:30,Wind,295.0,LowOutput,Low wind speed,true
-11/04/2026,19:00,Wind,140.0,Malfunction,Abnormal turbine output,true
-11/04/2026,09:30,Hydro,710.0,Normal,,true
-11/04/2026,16:00,Hydro,640.0,MaintenanceNeeded,Turbine inspection needed,true
-12/04/2026,07:30,Solar,19.0,LowOutput,Low sunlight,false
-12/04/2026,12:00,Solar,58.0,Normal,,false
-12/04/2026,14:30,Wind,305.0,Normal,,false
-12/04/2026,18:30,Hydro,650.0,LowOutput,Reduced water flow,false
-13/04/2026,08:00,Solar,22.0,Normal,,true
-13/04/2026,13:00,Wind,450.0,Normal,,true
-13/04/2026,15:30,Hydro,870.0,Normal,,true
+26/04/2026,18:00,Solar,0.0,LowOutput,,true
+26/04/2026,17:45,Solar,3.6,LowOutput,,true
+26/04/2026,17:30,Solar,23.8,Normal,,true
+26/04/2026,17:15,Solar,44.0,Normal,,true
+26/04/2026,17:00,Solar,64.3,Normal,,true
+02/05/2026,12:57,Hydro,673.831,LowOutput,,true
+02/05/2026,12:54,Hydro,667.5,LowOutput,,true
+01/05/2026,18:18,Hydro,1243.78,Normal,,true
+03/05/2026,20:18,Wind,1213.17,Normal,,true
