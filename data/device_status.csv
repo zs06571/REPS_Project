@@ -1,1 +1,9 @@
 energyType,deviceStatus,detectedDate,detectedTime,note
+Solar,Operational,10/04/2026,06:00,Normal operation
+Wind,Operational,10/04/2026,06:00,Normal operation
+Hydro,Operational,10/04/2026,06:00,Normal operation
+Solar,UnderMaintenance,12/04/2026,06:00,Panel cleaning and inspection
+Wind,Damaged,12/04/2026,09:00,Turbine fault detected
+Hydro,Operational,12/04/2026,09:00,Still available
+Solar,Operational,13/04/2026,07:00,Back to service
+Wind,Operational,13/04/2026,10:00,Repaired and restarted
