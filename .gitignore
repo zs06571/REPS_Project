@@ -45,8 +45,3 @@ build/
 
 ### Scala ###
 .bsp/
-
-.idea/workspace.xml
-.idea/shelf/
-.idea/modules/
-project/target/
